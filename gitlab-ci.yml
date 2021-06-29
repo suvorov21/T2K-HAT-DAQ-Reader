@@ -1,0 +1,19 @@
+image: rootproject/root:6.22.00-centos7
+
+stages:
+  - build
+  - test
+
+compile:
+  stage: build
+  before_script:
+  script:
+    - mkdir build; cd build
+    - gcc -v > ../gcc.log
+    - cmake3 ../src
+    - make 2>&1 | tee -a ../gcc.log
+  artifacts:
+    paths:
+      - ./build/app/Converter.exe
+      - ./build/app/Monitor.exe
+      - gcc.log
