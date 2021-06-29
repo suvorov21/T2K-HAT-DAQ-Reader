@@ -302,8 +302,6 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
 
   Int_t y = int(TString(s(first+1, last-1)).Atof());
 
-  std::cout << "Clicked " << x << " " << y << std::endl;
-
   _x_clicked = x;
   _y_clicked = y;
   _clicked = true;
@@ -352,11 +350,7 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
 //******************************************************************************
 void EventDisplay::DrawWF() {
 //******************************************************************************
-  // TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   f_WF_canvas = fWF->GetCanvas();
-  // f_WF_canvas->Clear();
-  // f_WF_canvas->Divide(3, 3);
-  std::cout << "DrawWF " << _x_clicked << " " << _y_clicked << std::endl;
   for (auto i = 0; i < 9; ++i) {
     WF[i]->Reset();
     for (auto t_id = 0; t_id < 510; ++t_id) {
