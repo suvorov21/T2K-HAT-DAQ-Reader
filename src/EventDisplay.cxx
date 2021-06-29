@@ -125,6 +125,16 @@ EventDisplay::EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name)
   MapWindow();
 
   fMonitoringThread = new TThread("monitoring", Monitoring, (void *)this);
+
+  _total_canv = new TCanvas("Accumulation", "Accumulation", 600, 400);
+  _total_canv->Divide(2);
+  _accum_time = new TH1F("time", "Time", 511, 0., 511.);
+  _accum_ed = new TH2F("accum_ed", "Accumulation", 38, -1., 37., 34, -1., 33.);
+  _total_canv->cd(1);
+  _accum_ed->Draw("colz");
+  _total_canv->cd(2);
+  _accum_time->Draw();
+  _total_canv->Update();
 };
 
 EventDisplay::~EventDisplay()
@@ -168,16 +178,22 @@ void EventDisplay::DoDraw()
   for (auto x = 0; x < geom::nPadx; ++x) {
     for (auto y = 0; y < geom::nPady; ++y) {
       auto max = 0;
+      auto maxt = -1;
       for (auto t = 0; t < n::samples; ++t) {
         int Q = 0;
           Q = _padAmpl[x][y][t] - 250;
 
         if (Q > max) {
           max = Q;
+          maxt = t;
         }
       } // over t
-      if (max)
+      if (max) {
         MM->Fill(x, y, max);
+        _accum_ed->Fill(x, y, max);
+        _accum_time->Fill(maxt);
+      }
+
     }
   }
   f_ED_canvas->cd();
@@ -188,6 +204,13 @@ void EventDisplay::DoDraw()
   // MM->GetYaxis()->SetNdivisions(36);
   gPad->SetGrid();
   f_ED_canvas->Update();
+
+  _total_canv->cd(1);
+  _accum_ed->Draw("colz");
+  _total_canv->cd(2);
+  _accum_time->Draw();
+  _total_canv->Update();
+
 }
 
 void EventDisplay::NextEvent() {
@@ -292,7 +315,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *s
 void *EventDisplay::Monitoring(void *ptr) {
     EventDisplay *ED = (EventDisplay *)ptr;
     while (doMonitoring) {
-        sleep(1);
+        sleep(0.4);
         ED->NextEvent();
     }
 }

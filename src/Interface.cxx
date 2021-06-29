@@ -22,7 +22,6 @@ void InterfaceAQS::Initialise(TString file_namme) {
 }
 
 int InterfaceAQS::Scan(int start, bool refresh) {
-  std::cout << "Scan the file from " << start << std::endl;
   // Reset _eventPos vector
   // Scan the file
   DatumContext_Init(&_dc, _param.sample_index_offset_zs);
@@ -32,6 +31,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   int prevEvnum = -1;
   int evnum;
   if (refresh) {
+    std::cout << "Scanning the file..." << std::endl;
     _eventPos.clear();
     fseek(_param.fsrc, 0, SEEK_SET);
     lastRead = 0;
@@ -104,8 +104,8 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   }
   if (refresh) {
     cout << "Scan done." << std::endl;
-    cout << _eventPos.size() << " events in the file..." << endl;
   }
+    cout << _eventPos.size() << " events in the file..." << endl;
 
   return _eventPos.size();
 }

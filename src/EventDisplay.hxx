@@ -79,6 +79,10 @@ private:
     bool _use_root;
     bool _use_aqs;
 
+    TCanvas* _total_canv;
+    TH2F* _accum_ed;
+    TH1F* _accum_time;
+
     // bool doMonitoring;
 
     InterfaceROOT* _interface_root;
