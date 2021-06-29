@@ -78,6 +78,10 @@ EventDisplay::EventDisplay(const TGWindow *p,
   fMain->AddFrame(fWF, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
   TGHorizontalFrame *hfrm = new TGHorizontalFrame(this, 10, 10);
 
+  f_WF_canvas = fWF->GetCanvas();
+  f_WF_canvas->Clear();
+  f_WF_canvas->Divide(3, 3);
+
   AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
   // Exit
@@ -300,8 +304,8 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   _clicked = true;
 
   f_WF_canvas = fWF->GetCanvas();
-  f_WF_canvas->Clear();
-  f_WF_canvas->Divide(3, 3);
+  // f_WF_canvas->Clear();
+  // f_WF_canvas->Divide(3, 3);
   for (auto i = 0; i < 9; ++i) {
     WF[i]->Reset();
     for (auto t_id = 0; t_id < 510; ++t_id) {
@@ -340,10 +344,11 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
 //******************************************************************************
 void EventDisplay::DrawWF() {
 //******************************************************************************
-  TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
+  // TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   f_WF_canvas = fWF->GetCanvas();
-  f_WF_canvas->Clear();
-  f_WF_canvas->Divide(3, 3);
+  // f_WF_canvas->Clear();
+  // f_WF_canvas->Divide(3, 3);
+  std::cout << "DrawWF " << _x_clicked << " " << _y_clicked << std::endl;
   for (auto i = 0; i < 9; ++i) {
     WF[i]->Reset();
     for (auto t_id = 0; t_id < 510; ++t_id) {
