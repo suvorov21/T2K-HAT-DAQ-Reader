@@ -110,17 +110,17 @@ EventDisplay::EventDisplay(const TGWindow *p,
   hfrm->AddFrame(fStartMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
                                               10, 10, 10, 10));
 
-  fNumber = new TGNumberEntry(hfrm, 0, 15,999, TGNumberFormat::kNESInteger,
+  fNumber = new TGNumberEntry(hfrm, 1, 15,999, TGNumberFormat::kNESInteger,
                               TGNumberFormat::kNEANonNegative,
                               TGNumberFormat::kNELLimitMinMax,
                               0, 99999);
 
   hfrm->AddFrame(fNumber, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
 
-  fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
-  fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
-  hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  // fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
+  // fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
+  // hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+  //                                             10, 10, 10, 10));
 
 
   AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
@@ -167,6 +167,7 @@ void EventDisplay::DoDraw() {
   if (eventID >= Nevents) {
     std::cout << "EOF" << std::endl;
     --eventID;
+    fNumber->SetIntNumber(eventID);
     return;
   }
   // get canvas and connect to monitor
@@ -221,6 +222,9 @@ void EventDisplay::DoDraw() {
   _accum_time->Draw();
   _total_canv->Update();
 
+  if (_clicked)
+    DrawWF();
+
 }
 
 //******************************************************************************
@@ -267,7 +271,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
                                      TObject *selected
                                      ) {
 //******************************************************************************
-  TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
+TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   if (event != 1)
     return;
   TString s = selected->GetObjectInfo(px,py);
@@ -288,6 +292,12 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
     return;
 
   Int_t y = int(TString(s(first+1, last-1)).Atof());
+
+  std::cout << "Clicked " << x << " " << y << std::endl;
+
+  _x_clicked = x;
+  _y_clicked = y;
+  _clicked = true;
 
   f_WF_canvas = fWF->GetCanvas();
   f_WF_canvas->Clear();
@@ -324,6 +334,48 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
   f_ED_canvas->Modified();
   f_ED_canvas->Update();
 
+
+}
+
+//******************************************************************************
+void EventDisplay::DrawWF() {
+//******************************************************************************
+  TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
+  f_WF_canvas = fWF->GetCanvas();
+  f_WF_canvas->Clear();
+  f_WF_canvas->Divide(3, 3);
+  for (auto i = 0; i < 9; ++i) {
+    WF[i]->Reset();
+    for (auto t_id = 0; t_id < 510; ++t_id) {
+      if (_x_clicked+1 > 35 || _x_clicked-1 < 0 || _y_clicked+1 > 31 || _y_clicked-1 < 0)
+        return;
+      int WF_signal = 0;
+      WF_signal = _padAmpl[_x_clicked-1+i%3][_y_clicked+1-i/3][t_id] - 250;
+      if (WF_signal > -250)
+        WF[i]->SetBinContent(t_id, WF_signal);
+      else
+        WF[i]->SetBinContent(t_id, 0);
+    }
+
+    f_WF_canvas->cd(i+1);
+    WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
+    WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
+    WF[i]->Draw("hist");
+    f_WF_canvas->Modified();
+    f_WF_canvas->Update();
+  }
+
+  f_ED_canvas = fED->GetCanvas();
+  f_ED_canvas->cd();
+
+  fbox = TBox(_x_clicked-1, _y_clicked-1, _x_clicked+2, _y_clicked+2);
+  fbox.SetFillStyle(0);
+  fbox.SetLineColor(kRed);
+  fbox.SetLineWidth(3);
+  fbox.Draw();
+  f_ED_canvas->Modified();
+  f_ED_canvas->Update();
+
 }
 
 
@@ -340,6 +392,8 @@ void *EventDisplay::Monitoring(void *ptr) {
   EventDisplay *ED = (EventDisplay *)ptr;
   while (doMonitoring) {
     usleep(400000);
+    ED->eventID = ED->Nevents - 2;
     ED->NextEvent();
   }
+  return NULL;
 }

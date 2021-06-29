@@ -46,9 +46,6 @@ class EventDisplay : public TGMainFrame
 
 private:
     /// I/O params
-    // Current event number
-    Int_t eventID = 0;
-
     /// Input interfaces
     bool _use_root;
     bool _use_aqs;
@@ -64,8 +61,6 @@ private:
     /// amplitude bounds for the WF histoes
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
-    /// total number of events in the file
-    int Nevents;
     /// data representation
     Int_t _padAmpl[geom::nPadx][geom::nPady][n::samples];
 
@@ -91,6 +86,10 @@ private:
     TH2F* _accum_ed;
     TH1F* _accum_time;
 
+    bool _clicked = false;
+    int _x_clicked;
+    int _y_clicked;
+
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
 public:
@@ -114,8 +113,15 @@ public:
     void GoToEnd();
     /// Show the WFs for the particular 3x3 pad region
     void ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *selected);
+    /// Function that actually plots the WF
+    void DrawWF();
     /// Do the constant monitoring each N microseconds
     static void *Monitoring(void * ptr);
+
+    /// total number of events in the file
+    int Nevents;
+    // Current event number
+    Int_t eventID = 1;
 
     ClassDef(EventDisplay, 1);
 };
