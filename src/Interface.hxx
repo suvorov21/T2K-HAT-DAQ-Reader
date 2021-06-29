@@ -26,16 +26,21 @@ typedef struct _Param
   int nevents = -1;
 } Param;
 
+/// Base interface class
 class InterfaceBase {
 public:
   InterfaceBase() {;}
   virtual ~InterfaceBase() {;}
 
+  /// Initialise the reader with file name
   void Initialise(TString file_name) {};
+  /// Scan and define the number of events
   int Scan(int start=-1, bool refresh=true) {return 0;}
+  /// Get the data for the particular event
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
 };
 
+/// AQS file reader
 class InterfaceAQS: public InterfaceBase {
 public:
   InterfaceAQS() {};
@@ -58,6 +63,7 @@ private:
   int _PadAmpl[geom::nPadx][geom::nPady][n::samples];
 };
 
+/// ROOT file reader
 class InterfaceROOT: public InterfaceBase {
 public:
   InterfaceROOT() {;}

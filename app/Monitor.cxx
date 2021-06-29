@@ -10,8 +10,6 @@ void help()
   printf("monitor <options>\n");
   printf("   -h                   : print usage\n");
   printf("   -i <input_file>      : input file name with a path\n");
-  // printf("   -p <Value>           : number of pre-samples below threshold in zero-suppressed mode\n");
-  // printf("   -v <level>           : verbose\n");
   exit(1);
 }
 
@@ -22,7 +20,6 @@ int main(int argc, char **argv) {
     if (c < 0) break;
     switch (c) {
       case 'i' :name          = optarg;       break;
-      // case 'v' : p->verbose              = atoi(optarg); break;
 
       case '?' : help();
     }

@@ -67,7 +67,6 @@ int main(int argc, char **argv) {
       interface_root = new InterfaceROOT();
    } else if (file_name.EndsWith(".aqs")) {
       interface_aqs = new InterfaceAQS();
-      // work_interface = static_cast<InterfaceAQS*>(work_interface);
       param.use_aqs = true;
    } else {
       std:cerr << "ERROR in converter. Unknown file type." << std::endl;

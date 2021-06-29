@@ -22,38 +22,44 @@ ClassImp(EventDisplay);
 
 bool doMonitoring;
 
-EventDisplay::EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name)
-    : TGMainFrame(p, w, h) {
-    SetCleanup(kDeepCleanup);
+//******************************************************************************
+EventDisplay::EventDisplay(const TGWindow *p,
+                           UInt_t w,
+                           UInt_t h,
+                           TString name
+                           ) : TGMainFrame(p, w, h) {
+//******************************************************************************
+  SetCleanup(kDeepCleanup);
 
-    Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
-    DontCallClose();
-    doMonitoring = false;
-    _use_root = _use_aqs = false;
+  Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
+  DontCallClose();
+  doMonitoring = false;
+  _use_root = _use_aqs = false;
 
-    MM = new TH2F("h", "", 38, -1., 37., 34, -1., 33.);
+  MM = new TH2F("h", "", 38, -1., 37., 34, -1., 33.);
   for (auto i = 0; i < 9; ++i)
     WF[i] = new TH1F(Form("WF_%i", i), "", 511, 0., 511);
 
+  // define the file type
   if (name.EndsWith(".root")) {
-      _use_root = true;
-      _interface_root = new InterfaceROOT();
-   } else if (name.EndsWith(".aqs")) {
-      _interface_aqs = new InterfaceAQS();
-      // work_interface = static_cast<InterfaceAQS*>(work_interface);
-      _use_aqs = true;
-   } else {
-      std:cerr << "ERROR in monitor. Unknown file type." << std::endl;
-      exit(1);
-   }
+    _use_root = true;
+    _interface_root = new InterfaceROOT();
+  } else if (name.EndsWith(".aqs")) {
+    _interface_aqs = new InterfaceAQS();
+    _use_aqs = true;
+  } else {
+    std:cerr << "ERROR in monitor. Unknown file type." << std::endl;
+    exit(1);
+  }
 
-   if (_use_root) {
-      _interface_root->Initialise(name);
-      Nevents = _interface_root->Scan();
-    } else if (_use_aqs) {
-      _interface_aqs->Initialise(name);
-      Nevents = _interface_aqs->Scan();
-    }
+  // read the vents number
+  if (_use_root) {
+    _interface_root->Initialise(name);
+    Nevents = _interface_root->Scan();
+  } else if (_use_aqs) {
+    _interface_aqs->Initialise(name);
+    Nevents = _interface_aqs->Scan();
+  }
 
 
   // ini GUI
@@ -71,46 +77,45 @@ EventDisplay::EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name)
   fButtonExit = new TGTextButton(hfrm, "        &Exit...        ", 3);
   fButtonExit->Connect("Clicked()" , "TApplication", gApplication, "Terminate()");
   hfrm->AddFrame(fButtonExit, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                                10, 10, 10, 10));
 
   // next event
   fNextEvent = new TGTextButton(hfrm, "        &Next        ", 3);
   fNextEvent->Connect("Clicked()" , "EventDisplay", this, "NextEvent()");
   hfrm->AddFrame(fNextEvent, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                               10, 10, 10, 10));
 
   // previous event
   fPrevEvent = new TGTextButton(hfrm, "        &Previous        ", 3);
   fPrevEvent->Connect("Clicked()" , "EventDisplay", this, "PrevEvent()");
   hfrm->AddFrame(fPrevEvent, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                               10, 10, 10, 10));
 
   // do draw
   fButtonDraw = new TGTextButton(hfrm, "        &Draw        ", 3);
   fButtonDraw->Connect("Clicked()" , "EventDisplay", this, "UpdateNumber()");
   hfrm->AddFrame(fButtonDraw, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                                10, 10, 10, 10));
 
   // start monitoring
   fStartMon = new TGTextButton(hfrm, "        &Start monitoring        ", 3);
   fStartMon->Connect("Clicked()" , "EventDisplay", this, "StartMonitoring()");
   hfrm->AddFrame(fStartMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                              10, 10, 10, 10));
 
 
   // start monitoring
   fEndMon = new TGTextButton(hfrm, "        &End monitoring        ", 3);
   fEndMon->Connect("Clicked()" , "EventDisplay", this, "EndMonitoring()");
   hfrm->AddFrame(fEndMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-   10, 10, 10, 10));
+                                            10, 10, 10, 10));
 
 
   fNumber = new TGNumberEntry(hfrm, 0, 9,999, TGNumberFormat::kNESInteger,
-                                               TGNumberFormat::kNEANonNegative,
-                                               TGNumberFormat::kNELLimitMinMax,
-                                               0, 99999);
-  // fEntry = new TGTextEntry(this);
-  // hfrm->AddFrame(fEntry, new TGLayoutHints(kLHintsCenterX | kLHintsRight, 10, 10, 10, 10));
+                              TGNumberFormat::kNEANonNegative,
+                              TGNumberFormat::kNELLimitMinMax,
+                              0, 99999);
+
   hfrm->AddFrame(fNumber, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
 
   AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
@@ -137,25 +142,24 @@ EventDisplay::EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name)
   _total_canv->Update();
 };
 
-EventDisplay::~EventDisplay()
-{
-    // Destructor.
-
-    Cleanup();
+EventDisplay::~EventDisplay() {
+  Cleanup();
 }
 
 
-void EventDisplay::DoExit()
-{
-    // Close application window.
-    std::cout << "Exiting" << std::endl;
-    gSystem->Unlink(fName.Data());
-    gApplication->Terminate();
+//******************************************************************************
+void EventDisplay::DoExit() {
+//******************************************************************************
+  // Close application window.
+  std::cout << "Exiting" << std::endl;
+  gSystem->Unlink(fName.Data());
+  gApplication->Terminate();
 }
 
-void EventDisplay::DoDraw()
-{
-    if (eventID >= Nevents) {
+//******************************************************************************
+void EventDisplay::DoDraw() {
+//******************************************************************************
+  if (eventID >= Nevents) {
     std::cout << "EOF" << std::endl;
     --eventID;
     return;
@@ -163,9 +167,6 @@ void EventDisplay::DoDraw()
   // get canvas and connect to monitor
   f_ED_canvas = fED->GetCanvas();
   f_ED_canvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","EventDisplay",this, "ClickEventOnGraph(Int_t,Int_t,Int_t,TObject*)");
-
-  // f_ED_canvas->Connect("Pick(Int_t, Int_t, TObject*)", "MyMainFrame", this, "HandleTest(Int_t, Int_t, TObject*)");
-  // f_ED_canvas->Connect("Pick(Int_t, Int_t, TObject*)", "MyMainFrame", this, "HandleTest(Int_t, Int_t, TObject*)");
 
   // read event
   if (_use_root)
@@ -181,7 +182,7 @@ void EventDisplay::DoDraw()
       auto maxt = -1;
       for (auto t = 0; t < n::samples; ++t) {
         int Q = 0;
-          Q = _padAmpl[x][y][t] - 250;
+        Q = _padAmpl[x][y][t] - 250;
 
         if (Q > max) {
           max = Q;
@@ -199,9 +200,12 @@ void EventDisplay::DoDraw()
   f_ED_canvas->cd();
   gStyle->SetOptStat(0);
   MM->Draw("colz");
-  // MM->GetXaxis()->SetNdivisions(38);
-  // MM->GetXaxis()->SetLabelSize(0.025);
-  // MM->GetYaxis()->SetNdivisions(36);
+  /** Whether to draw the pad borders */
+  MM->GetXaxis()->SetNdivisions(38);
+  MM->GetXaxis()->SetLabelSize(0.025);
+  MM->GetYaxis()->SetNdivisions(36);
+  /** end of block*/
+
   gPad->SetGrid();
   f_ED_canvas->Update();
 
@@ -213,14 +217,16 @@ void EventDisplay::DoDraw()
 
 }
 
+//******************************************************************************
 void EventDisplay::NextEvent() {
+//******************************************************************************
   ++eventID;
   if (doMonitoring) {
     if (_use_root) {
-        Nevents = _interface_root->Scan(Nevents-1, false);
-      } else if (_use_aqs) {
-        Nevents = _interface_aqs->Scan(Nevents-1, false);
-      }
+      Nevents = _interface_root->Scan(Nevents-1, false);
+    } else if (_use_aqs) {
+      Nevents = _interface_aqs->Scan(Nevents-1, false);
+    }
   }
   fNumber->SetIntNumber(eventID);
   DoDraw();
@@ -247,10 +253,13 @@ void EventDisplay::EndMonitoring() {
 }
 
 
-
-
-void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *selected)
-{
+//******************************************************************************
+void EventDisplay::ClickEventOnGraph(Int_t event,
+                                     Int_t px,
+                                     Int_t py,
+                                     TObject *selected
+                                     ) {
+//******************************************************************************
   TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   if (event != 1)
     return;
@@ -273,8 +282,6 @@ void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *s
 
   Int_t y = int(TString(s(first+1, last-1)).Atof());
 
-  //std::cout << x << "  " << y << std::endl;
-
   f_WF_canvas = fWF->GetCanvas();
   f_WF_canvas->Clear();
   f_WF_canvas->Divide(3, 3);
@@ -284,7 +291,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *s
       if (x+1 > 35 || x-1 < 0 || y+1 > 31 || y-1 < 0)
         continue;
       int WF_signal = 0;
-        WF_signal = _padAmpl[x-1+i%3][y+1-i/3][t_id] - 250;
+      WF_signal = _padAmpl[x-1+i%3][y+1-i/3][t_id] - 250;
       if (WF_signal > -250)
         WF[i]->SetBinContent(t_id, WF_signal);
       else
@@ -312,10 +319,12 @@ void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *s
 
 }
 
+//******************************************************************************
 void *EventDisplay::Monitoring(void *ptr) {
-    EventDisplay *ED = (EventDisplay *)ptr;
-    while (doMonitoring) {
-        usleep(400000);
-        ED->NextEvent();
-    }
+//******************************************************************************
+  EventDisplay *ED = (EventDisplay *)ptr;
+  while (doMonitoring) {
+    usleep(400000);
+    ED->NextEvent();
+  }
 }

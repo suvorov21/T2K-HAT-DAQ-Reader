@@ -46,17 +46,27 @@ class EventDisplay : public TGMainFrame
 
 private:
     /// I/O params
-    // file
+    // Current event number
     Int_t eventID = 0;
+
+    /// Input interfaces
+    bool _use_root;
+    bool _use_aqs;
+    InterfaceROOT* _interface_root;
+    InterfaceAQS* _interface_aqs;
 
     // WF plotter params
     TH2F* MM;
     TH1F* WF[9];
+    /// Time bounds for WF plotter
     Int_t WFstart = 100;
     Int_t WFend = 260;
+    /// amplitude bounds for the WF histoes
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
+    /// total number of events in the file
     int Nevents;
+    /// data representation
     Int_t _padAmpl[geom::nPadx][geom::nPady][n::samples];
 
     // GUI
@@ -75,37 +85,37 @@ private:
 
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
+    TBox fbox;
 
-    bool _use_root;
-    bool _use_aqs;
-
+    /// Accumulation canvas and histoes
     TCanvas* _total_canv;
     TH2F* _accum_ed;
     TH1F* _accum_time;
 
-    // bool doMonitoring;
-
-    InterfaceROOT* _interface_root;
-    InterfaceAQS* _interface_aqs;
-
+    /// Thread for constant monitoring
     TThread *fMonitoringThread;
-
-    TBox fbox;
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name);
     virtual ~EventDisplay();
 
 public:
-    void SelectFile();
+    /// Draw the particular event defined by eventID
     void DoDraw();
+    /// Close the app
     void DoExit();
-    void DoEnteredCommand();
+    /// Go to next event
     void NextEvent();
+    /// Go to prev event
     void PrevEvent();
+    /// Update the event number in the window
     void UpdateNumber();
+    /// start the constant monitoring
     void StartMonitoring();
+    /// end the constant monitoring
     void EndMonitoring();
+    /// Show the WFs for the particular 3x3 pad region
     void ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *selected);
+    /// Do the constant monitoring each N microseconds
     static void *Monitoring(void * ptr);
 
     ClassDef(EventDisplay, 1);

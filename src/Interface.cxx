@@ -11,7 +11,9 @@
 #include "frame.h"
 
 
+//******************************************************************************
 void InterfaceAQS::Initialise(TString file_namme) {
+//******************************************************************************
   _param.fsrc = fopen(file_namme, "rb");
   _daq.loadDAQ();
   cout << "... DAQ loaded successfully" << endl;
@@ -21,7 +23,9 @@ void InterfaceAQS::Initialise(TString file_namme) {
   _firstEv = -1;
 }
 
+//******************************************************************************
 int InterfaceAQS::Scan(int start, bool refresh) {
+//******************************************************************************
   // Reset _eventPos vector
   // Scan the file
   DatumContext_Init(&_dc, _param.sample_index_offset_zs);
@@ -110,8 +114,9 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   return _eventPos.size();
 }
 
+//******************************************************************************
 void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
-
+//******************************************************************************
   unsigned short datum;
   int err;
   bool done = true;
@@ -158,14 +163,9 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
             a = (int)_dc.AbsoluteSampleIndex;
             b = (int)_dc.AdcSample;
 
-            // std::cout << x << "\t" << y << "\t" << a << "\t" << b << std::endl;
-            // std::cout << "card\t" << _dc.CardIndex << "\tChip\t" << _dc.ChipIndex << "\tch\t" << _dc.ChannelIndex << std::endl;
-
+            // safety check
             if ( x >= 0 && y >= 0) {
-
-              // std::cout << "card\t" << _dc.CardIndex << "\tChip\t" << _dc.ChipIndex << "\tch\t" << _dc.ChannelIndex << "\tx\t" << x << "\ty\t" << y << std::endl;
               _PadAmpl[x][y][a] = b;
-              // std::cout << "charge " << b << std::endl;
             } else {
               std::cout << "card\t" << _dc.CardIndex << "\tChip\t" << _dc.ChipIndex << "\tch\t" << _dc.ChannelIndex << std::endl;
             }
@@ -189,9 +189,9 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
         }
         else if (_dc.ItemType == IT_PED_HISTO_MD) {}
         else if (_dc.ItemType == IT_UNKNOWN) {}
-        else if (_dc.ItemType == IT_CHAN_PED_CORRECTION) {} //printf("Type : 0x%x \n", _dc.ItemType);}
-        else if (_dc.ItemType == IT_CHAN_ZERO_SUPPRESS_THRESHOLD) {} //printf("Type : 0x%x \n", _dc.ItemType);}
-        else {} //}&& _dc.ItemType==IT_START_OF_EVENT
+        else if (_dc.ItemType == IT_CHAN_PED_CORRECTION) {}
+        else if (_dc.ItemType == IT_CHAN_ZERO_SUPPRESS_THRESHOLD) {}
+        else {}
       } // end of if (_dc.isItemComplete)
     } // end of second loop inside while
   } // end of while(done) loop
@@ -202,8 +202,9 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
                padAmpl[i][j][t] = _PadAmpl[i][j][t];
 }
 
+//******************************************************************************
 void InterfaceROOT::Initialise(TString file_namme) {
-  // TFile* test = new TFile(file_namme.Data());
+//******************************************************************************
   _file_in = new TFile(file_namme.Data());
   _tree_in = (TTree*)_file_in->Get("tree");
 
@@ -211,11 +212,15 @@ void InterfaceROOT::Initialise(TString file_namme) {
   std::cout << "Input read" << std::endl;
 }
 
+//******************************************************************************
 int InterfaceROOT::Scan(int start, bool refresh) {
+//******************************************************************************
   return _tree_in->GetEntries();
 }
 
+//******************************************************************************
 void InterfaceROOT::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
+//******************************************************************************
   _tree_in->GetEntry(i);
   padAmpl = _PadAmpl;
 }
