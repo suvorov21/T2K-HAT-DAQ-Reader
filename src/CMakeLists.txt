@@ -19,6 +19,7 @@ set (CORE_DICT_HEADERFILES
     EventDisplay.hxx
     platform_spec.h
     Interface.hxx
+    SetT2KStyle.hxx
 )
 
 set( CORE_HEADERFILES

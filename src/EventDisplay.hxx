@@ -81,8 +81,7 @@ private:
     TGTextButton* fNextEvent;
     TGTextButton* fPrevEvent;
     TGTextButton* fStartMon;
-    TGTextButton* fEndMon;
-
+    TGTextButton* fGoToEnd;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
@@ -111,8 +110,8 @@ public:
     void UpdateNumber();
     /// start the constant monitoring
     void StartMonitoring();
-    /// end the constant monitoring
-    void EndMonitoring();
+    /// Go to file end
+    void GoToEnd();
     /// Show the WFs for the particular 3x3 pad region
     void ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *selected);
     /// Do the constant monitoring each N microseconds

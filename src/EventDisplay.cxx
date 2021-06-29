@@ -12,6 +12,7 @@
 #include <TGFileDialog.h>
 #include <TRootCanvas.h>
 #import "TStyle.h"
+#include "SetT2KStyle.hxx"
 
 #include "TThread.h"
 #include <unistd.h>
@@ -30,6 +31,12 @@ EventDisplay::EventDisplay(const TGWindow *p,
                            ) : TGMainFrame(p, w, h) {
 //******************************************************************************
   SetCleanup(kDeepCleanup);
+
+  TString localStyleName = "T2K";
+  int localWhichStyle = 1;
+  TStyle* t2kstyle = T2K().SetT2KStyle(localWhichStyle, localStyleName);
+  gROOT->SetStyle(t2kstyle->GetName());
+  gROOT->ForceStyle();
 
   Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
   DontCallClose();
@@ -103,20 +110,18 @@ EventDisplay::EventDisplay(const TGWindow *p,
   hfrm->AddFrame(fStartMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
                                               10, 10, 10, 10));
 
-
-  // start monitoring
-  fEndMon = new TGTextButton(hfrm, "        &End monitoring        ", 3);
-  fEndMon->Connect("Clicked()" , "EventDisplay", this, "EndMonitoring()");
-  hfrm->AddFrame(fEndMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                            10, 10, 10, 10));
-
-
-  fNumber = new TGNumberEntry(hfrm, 0, 9,999, TGNumberFormat::kNESInteger,
+  fNumber = new TGNumberEntry(hfrm, 0, 15,999, TGNumberFormat::kNESInteger,
                               TGNumberFormat::kNEANonNegative,
                               TGNumberFormat::kNELLimitMinMax,
                               0, 99999);
 
   hfrm->AddFrame(fNumber, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+
+  fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
+  fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
+  hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+                                              10, 10, 10, 10));
+
 
   AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
 
@@ -203,6 +208,7 @@ void EventDisplay::DoDraw() {
   /** Whether to draw the pad borders */
   MM->GetXaxis()->SetNdivisions(38);
   MM->GetXaxis()->SetLabelSize(0.025);
+  MM->GetYaxis()->SetLabelSize(0.025);
   MM->GetYaxis()->SetNdivisions(36);
   /** end of block*/
 
@@ -244,14 +250,15 @@ void EventDisplay::UpdateNumber() {
 }
 
 void EventDisplay::StartMonitoring() {
-  doMonitoring = true;
-  fMonitoringThread->Run();
+  if (doMonitoring) {
+    doMonitoring = false;
+    fStartMon->SetText("        &Start monitoring        ");
+  } else {
+    doMonitoring = true;
+    fMonitoringThread->Run();
+    fStartMon->SetText("        &Stop monitoring        ");
+  }
 }
-
-void EventDisplay::EndMonitoring() {
-  doMonitoring = false;
-}
-
 
 //******************************************************************************
 void EventDisplay::ClickEventOnGraph(Int_t event,
@@ -317,6 +324,14 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
   f_ED_canvas->Modified();
   f_ED_canvas->Update();
 
+}
+
+
+//******************************************************************************
+void EventDisplay::GoToEnd() {
+//******************************************************************************
+  eventID = Nevents - 3;
+  NextEvent();
 }
 
 //******************************************************************************
