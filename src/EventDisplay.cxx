@@ -178,6 +178,8 @@ void EventDisplay::DoDraw() {
   f_ED_canvas = fED->GetCanvas();
   f_ED_canvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","EventDisplay",this, "ClickEventOnGraph(Int_t,Int_t,Int_t,TObject*)");
 
+  bool fill_gloabl = (eventPrev != eventID);
+
   // read event
   if (_use_root)
     _interface_root->GetEvent(eventID, _padAmpl);
@@ -201,8 +203,11 @@ void EventDisplay::DoDraw() {
       } // over t
       if (max) {
         MM->Fill(x, y, max);
-        _accum_ed->Fill(x, y, max);
-        _accum_time->Fill(maxt);
+        if (fill_gloabl) {
+          _accum_ed->Fill(x, y, max);
+          _accum_time->Fill(maxt);
+          eventPrev = eventID;
+        }
       }
 
     }
@@ -323,9 +328,12 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
     WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
     WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
     WF[i]->Draw("hist");
-    f_WF_canvas->Modified();
-    f_WF_canvas->Update();
+    // f_WF_canvas->Modified();
+    // f_WF_canvas->Update();
   }
+
+  f_WF_canvas->Modified();
+  f_WF_canvas->Update();
 
   f_ED_canvas = fED->GetCanvas();
   f_ED_canvas->cd();

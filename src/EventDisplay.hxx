@@ -57,7 +57,7 @@ private:
     TH1F* WF[9];
     /// Time bounds for WF plotter
     Int_t WFstart = 100;
-    Int_t WFend = 260;
+    Int_t WFend = 450;
     /// amplitude bounds for the WF histoes
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
@@ -122,6 +122,7 @@ public:
     int Nevents;
     // Current event number
     Int_t eventID = 1;
+    Int_t eventPrev = -1;
 
     ClassDef(EventDisplay, 1);
 };
