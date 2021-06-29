@@ -10,7 +10,7 @@ compile:
   script:
     - mkdir build; cd build
     - gcc -v > ../gcc.log
-    - cmake3 ../src
+    - cmake3 ../
     - make 2>&1 | tee -a ../gcc.log
   artifacts:
     paths:
