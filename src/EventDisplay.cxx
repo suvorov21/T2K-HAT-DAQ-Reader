@@ -9,12 +9,12 @@
 #include <TRootEmbeddedCanvas.h>
 #include <TGFileBrowser.h>
 #include "EventDisplay.hxx"
-// #include <TGFileInfo.h>
 #include <TGFileDialog.h>
 #include <TRootCanvas.h>
 #import "TStyle.h"
 
 #include "TThread.h"
+#include <unistd.h>
 
 #include <iostream>
 
@@ -126,7 +126,7 @@ EventDisplay::EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name)
 
   fMonitoringThread = new TThread("monitoring", Monitoring, (void *)this);
 
-  _total_canv = new TCanvas("Accumulation", "Accumulation", 600, 400);
+  _total_canv = new TCanvas("Accumulation", "Accumulation", 800, 800, 700, 400);
   _total_canv->Divide(2);
   _accum_time = new TH1F("time", "Time", 511, 0., 511.);
   _accum_ed = new TH2F("accum_ed", "Accumulation", 38, -1., 37., 34, -1., 33.);
@@ -315,7 +315,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event, Int_t px, Int_t py, TObject *s
 void *EventDisplay::Monitoring(void *ptr) {
     EventDisplay *ED = (EventDisplay *)ptr;
     while (doMonitoring) {
-        sleep(0.4);
+        usleep(400000);
         ED->NextEvent();
     }
 }
