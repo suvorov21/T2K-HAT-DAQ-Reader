@@ -41,7 +41,6 @@ EventDisplay::EventDisplay(const TGWindow *p,
   Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
   DontCallClose();
   doMonitoring = false;
-  _use_root = _use_aqs = false;
 
   MM = new TH2F("h", "", 38, -1., 37., 34, -1., 33.);
   for (auto i = 0; i < 9; ++i)
@@ -49,25 +48,22 @@ EventDisplay::EventDisplay(const TGWindow *p,
 
   // define the file type
   if (name.EndsWith(".root")) {
-    _use_root = true;
-    _interface_root = new InterfaceROOT();
+    std::cout << "Use ROOT format" << std::endl;
+    _interface = std::make_shared<InterfaceROOT>();
   } else if (name.EndsWith(".aqs")) {
-    _interface_aqs = new InterfaceAQS();
-    _use_aqs = true;
+    std::cout << "Use AQS format" << std::endl;
+    _interface = std::make_shared<InterfaceAQS>();
   } else {
     std:cerr << "ERROR in monitor. Unknown file type." << std::endl;
     exit(1);
   }
 
-  // read the vents number
-  if (_use_root) {
-    _interface_root->Initialise(name);
-    Nevents = _interface_root->Scan();
-  } else if (_use_aqs) {
-    _interface_aqs->Initialise(name);
-    Nevents = _interface_aqs->Scan();
-  }
+  _interface->Initialise(name);
+  _interface->Scan();
 
+  // read the events number
+  _interface->Initialise(name);
+  Nevents = _interface->Scan();
 
   // ini GUI
   TGHorizontalFrame* fMain = new TGHorizontalFrame(this, w, h);
@@ -183,10 +179,11 @@ void EventDisplay::DoDraw() {
   bool fill_gloabl = (eventPrev != eventID);
 
   // read event
-  if (_use_root)
-    _interface_root->GetEvent(eventID, _padAmpl);
-  else if (_use_aqs)
-    _interface_aqs->GetEvent(eventID, _padAmpl);
+  _interface->GetEvent(eventID, _padAmpl);
+  // if (_use_root)
+  //   _interface_root->GetEvent(eventID, _padAmpl);
+  // else if (_use_aqs)
+  //   _interface_aqs->GetEvent(eventID, _padAmpl);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents << std::flush;
   MM->Reset();
@@ -242,13 +239,10 @@ void EventDisplay::DoDraw() {
 void EventDisplay::NextEvent() {
 //******************************************************************************
   ++eventID;
-  if (doMonitoring) {
-    if (_use_root) {
-      Nevents = _interface_root->Scan(Nevents-1, false);
-    } else if (_use_aqs) {
-      Nevents = _interface_aqs->Scan(Nevents-1, false);
-    }
-  }
+  // re
+  if (doMonitoring)
+    _interface->Scan(Nevents-1, false);
+
   fNumber->SetIntNumber(eventID);
   DoDraw();
 }

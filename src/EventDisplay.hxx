@@ -47,10 +47,7 @@ class EventDisplay : public TGMainFrame
 private:
     /// I/O params
     /// Input interfaces
-    bool _use_root;
-    bool _use_aqs;
-    InterfaceROOT* _interface_root;
-    InterfaceAQS* _interface_aqs;
+    std::shared_ptr<InterfaceBase> _interface;
 
     // WF plotter params
     TH2F* MM;
