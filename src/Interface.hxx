@@ -52,7 +52,7 @@ public:
 
 private:
   Features _fea;
-  std::vector<long int> _eventPos;
+  std::vector<std::pair<long int, int> > _eventPos;
   __int64 lastRead;
   DatumContext _dc;
   Param _param;

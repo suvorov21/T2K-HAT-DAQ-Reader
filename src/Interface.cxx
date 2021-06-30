@@ -42,7 +42,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
     lastRead = 0;
   }
   else {
-    fseek(_param.fsrc, _eventPos[start], SEEK_SET);
+    fseek(_param.fsrc, _eventPos[start].first, SEEK_SET);
   }
 
   _fea.TotalFileByteRead = lastRead;
@@ -63,14 +63,14 @@ int InterfaceAQS::Scan(int start, bool refresh) {
           if (_dc.ItemType == IT_START_OF_EVENT) {
             evnum = (int)_dc.EventNumber;
             if (_firstEv < 0) {
-              _eventPos.push_back(_fea.TotalFileByteRead - 6*sizeof(unsigned short));
+              _eventPos.push_back(std::make_pair(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum));
               _firstEv = evnum;
               prevEvnum = evnum;
               lastRead = _fea.TotalFileByteRead - 6*sizeof(unsigned short);
             }
             else if (evnum != prevEvnum) {
-              if (_fea.TotalFileByteRead - 6*sizeof(unsigned short) != _eventPos[_eventPos.size()-1]) {
-                _eventPos.push_back(_fea.TotalFileByteRead - 6*sizeof(unsigned short));
+              if (_fea.TotalFileByteRead - 6*sizeof(unsigned short) != _eventPos[_eventPos.size()-1].first) {
+                _eventPos.push_back(std::make_pair(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum));
                 prevEvnum = evnum;
                 lastRead = _fea.TotalFileByteRead - 6*sizeof(unsigned short);
               }
@@ -124,7 +124,7 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
   bool done = true;
   int ntot;
   // std::cout << "reading event " << i  << " id " << i - _firstEv << std::endl;
-  fseek(_param.fsrc, _eventPos[i - _firstEv], SEEK_SET);
+  fseek(_param.fsrc, _eventPos[i - _firstEv].first, SEEK_SET);
   // std::cout << "go to " << _eventPos[i - _firstEv] << std::endl;
   // clean the padAmpl
   memset(_PadAmpl, 0, geom::nPadx * geom::nPady * n::samples * (sizeof(Int_t)));
@@ -152,7 +152,7 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
         if (_dc.ItemType == IT_START_OF_EVENT && (int)_dc.EventNumber == i) {
           eventNumber = (int)_dc.EventNumber;
           // std::cout << "Event num " << eventNumber << std::endl;
-        } else if (eventNumber == i && _dc.ItemType == IT_ADC_SAMPLE) {
+        } else if (eventNumber == _eventPos[i - _firstEv].second && _dc.ItemType == IT_ADC_SAMPLE) {
           // std::cout << "ADC datum" << std::endl;
           if (_dc.ChannelIndex != 15 && _dc.ChannelIndex != 28 && _dc.ChannelIndex != 53 && _dc.ChannelIndex != 66 && _dc.ChannelIndex > 2 && _dc.ChannelIndex < 79) {
 
