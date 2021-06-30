@@ -62,6 +62,11 @@ EventDisplay::EventDisplay(const TGWindow *p,
   _interface->Initialise(name);
   Nevents = _interface->Scan();
 
+  if (Nevents == 0) {
+    std::cerr << "Empty file!" << std::endl;
+    exit(1);
+  }
+
   // ini GUI
   TGHorizontalFrame* fMain = new TGHorizontalFrame(this, w, h);
   fED = new TRootEmbeddedCanvas("glec1", fMain, 700, 500);
