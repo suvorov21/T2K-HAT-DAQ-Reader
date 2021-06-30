@@ -29,7 +29,6 @@ int InterfaceAQS::Scan(int start, bool refresh) {
 //******************************************************************************
   // Reset _eventPos vector
   // Scan the file
-  std::cout << "scan AQS" << std::endl;
   DatumContext_Init(&_dc, _param.sample_index_offset_zs);
   unsigned short datum;
   int err;
