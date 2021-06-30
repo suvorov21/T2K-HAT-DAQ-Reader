@@ -27,7 +27,8 @@ bool doMonitoring;
 EventDisplay::EventDisplay(const TGWindow *p,
                            UInt_t w,
                            UInt_t h,
-                           TString name
+                           TString name,
+                           int verbose
                            ) : TGMainFrame(p, w, h) {
 //******************************************************************************
   SetCleanup(kDeepCleanup);
@@ -59,7 +60,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
   }
 
   // read the events number
-  _interface->Initialise(name);
+  _interface->Initialise(name, verbose);
   Nevents = _interface->Scan();
 
   if (Nevents == 0) {
@@ -251,6 +252,8 @@ void EventDisplay::NextEvent() {
 
 void EventDisplay::PrevEvent() {
   --eventID;
+  if (eventID < 0)
+    return;
   fNumber->SetIntNumber(eventID);
   DoDraw();
 }

@@ -33,11 +33,15 @@ public:
   virtual ~InterfaceBase() {;}
 
   /// Initialise the reader with file name
-  virtual void Initialise(TString file_name) {};
+  virtual void Initialise(TString file_name, int verbose) {};
   /// Scan and define the number of events
   virtual int Scan(int start=-1, bool refresh=true) {return 0;}
   /// Get the data for the particular event
   virtual void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
+
+protected:
+  /// verbosity level
+  int _verbose;
 };
 
 /// AQS file reader
@@ -46,7 +50,7 @@ public:
   InterfaceAQS() {};
   InterfaceAQS(InterfaceBase var) {};
   virtual ~InterfaceAQS() {;}
-  void Initialise(TString file_name);
+  void Initialise(TString file_name, int verbose);
   int Scan(int start=-1, bool refresh=true);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 
@@ -69,7 +73,7 @@ public:
   InterfaceROOT() {;}
   InterfaceROOT(InterfaceBase var) {;}
   virtual ~InterfaceROOT() {;}
-  void Initialise(TString file_name);
+  void Initialise(TString file_name, int verbose);
   int Scan(int start=-1, bool refresh=true);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 

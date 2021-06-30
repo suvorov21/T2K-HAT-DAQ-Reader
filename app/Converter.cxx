@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
-   interface->Initialise(file_name);
+   interface->Initialise(file_name, param.verbose);
 
    // extract the file name from the input
    std::string file_in = param.inp_file;

@@ -90,7 +90,7 @@ private:
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
 public:
-    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name);
+    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
     virtual ~EventDisplay();
 
 public:

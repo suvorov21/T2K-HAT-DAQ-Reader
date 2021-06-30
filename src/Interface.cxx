@@ -12,8 +12,9 @@
 
 
 //******************************************************************************
-void InterfaceAQS::Initialise(TString file_namme) {
+void InterfaceAQS::Initialise(TString file_namme, int verbose) {
 //******************************************************************************
+  _verbose = verbose;
   std::cout << "Initialise AQS interface" << std::endl;
   _param.fsrc = fopen(file_namme, "rb");
   _daq.loadDAQ();
@@ -35,7 +36,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   bool done = true;
   int prevEvnum = -1;
   int evnum;
-  if (refresh) {
+  if (refresh || _verbose > 0) {
     std::cout << "Scanning the file..." << std::endl;
     _eventPos.clear();
     fseek(_param.fsrc, 0, SEEK_SET);
@@ -63,6 +64,8 @@ int InterfaceAQS::Scan(int start, bool refresh) {
           if (_dc.ItemType == IT_START_OF_EVENT) {
             evnum = (int)_dc.EventNumber;
             if (_firstEv < 0) {
+              if (_verbose > 0)
+                std::cout << "First event id  " << evnum << "  at  " << _fea.TotalFileByteRead - 6*sizeof(unsigned short) << std::endl;
               _eventPos.push_back(std::make_pair(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum));
               _firstEv = evnum;
               prevEvnum = evnum;
@@ -107,7 +110,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
       }
     }
   }
-  if (refresh) {
+  if (refresh || _verbose > 0) {
     cout << "Scan done." << std::endl;
     cout << _eventPos.size() << " events in the file." << std::endl;
   }
@@ -123,8 +126,10 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
   int err;
   bool done = true;
   int ntot;
+  if (_verbose > 0)
+    std::cout << "\nGetting event #" << i << "  at pos  " << _eventPos[i].first << "  with id  " << _eventPos[i].second << std::endl;;
   // std::cout << "reading event " << i  << " id " << i - _firstEv << std::endl;
-  fseek(_param.fsrc, _eventPos[i - _firstEv].first, SEEK_SET);
+  fseek(_param.fsrc, _eventPos[i].first, SEEK_SET);
   // std::cout << "go to " << _eventPos[i - _firstEv] << std::endl;
   // clean the padAmpl
   memset(_PadAmpl, 0, geom::nPadx * geom::nPady * n::samples * (sizeof(Int_t)));
@@ -149,10 +154,12 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
       if (_dc.isItemComplete) {
         // std::cout << "Datum complete, type " << _dc.ItemType << std::endl;
 
-        if (_dc.ItemType == IT_START_OF_EVENT && (int)_dc.EventNumber == i) {
-          eventNumber = (int)_dc.EventNumber;
-          // std::cout << "Event num " << eventNumber << std::endl;
-        } else if (eventNumber == _eventPos[i - _firstEv].second && _dc.ItemType == IT_ADC_SAMPLE) {
+        if (_dc.ItemType == IT_START_OF_EVENT) {
+          if (_verbose > 0)
+            std::cout << "Found event with id " << (int)_dc.EventNumber << std::endl;
+          if ((int)_dc.EventNumber == _eventPos[i].second)
+            eventNumber = (int)_dc.EventNumber;
+        } else if (eventNumber == _eventPos[i].second && _dc.ItemType == IT_ADC_SAMPLE) {
           // std::cout << "ADC datum" << std::endl;
           if (_dc.ChannelIndex != 15 && _dc.ChannelIndex != 28 && _dc.ChannelIndex != 53 && _dc.ChannelIndex != 66 && _dc.ChannelIndex > 2 && _dc.ChannelIndex < 79) {
 
@@ -205,9 +212,10 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
 }
 
 //******************************************************************************
-void InterfaceROOT::Initialise(TString file_namme) {
+void InterfaceROOT::Initialise(TString file_namme, int verbose) {
 //******************************************************************************
   std::cout << "Initialise ROOT interface" << std::endl;
+  _verbose = verbose;
   _file_in = new TFile(file_namme.Data());
   _tree_in = (TTree*)_file_in->Get("tree");
 
