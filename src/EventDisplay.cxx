@@ -58,9 +58,6 @@ EventDisplay::EventDisplay(const TGWindow *p,
     exit(1);
   }
 
-  _interface->Initialise(name);
-  _interface->Scan();
-
   // read the events number
   _interface->Initialise(name);
   Nevents = _interface->Scan();
