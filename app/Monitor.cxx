@@ -14,7 +14,7 @@ void help()
 }
 
 int main(int argc, char **argv) {
-   TString name;
+   TString name = "";
    for (;;) {
     int c = getopt(argc, argv, "i:o:p:n:ht");
     if (c < 0) break;
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
       case '?' : help();
     }
   }
-  if (argc == 1)
+  if (argc == 1 || name == "")
     help();
 
    TApplication theApp("App", &argc,argv);

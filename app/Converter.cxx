@@ -56,27 +56,19 @@ int main(int argc, char **argv) {
    if (parse_cmd_args(argc, argv, &param) < 0)
     return (-1);
 
-   InterfaceBase interface;
-
    TString file_name = TString(param.inp_file);
-   InterfaceROOT* interface_root = NULL;
-   InterfaceAQS* interface_aqs = NULL;
+   std::shared_ptr<InterfaceBase> interface;
 
    if (file_name.EndsWith(".root")) {
-      param.use_root = true;
-      interface_root = new InterfaceROOT();
+      interface = std::make_shared<InterfaceROOT>();
    } else if (file_name.EndsWith(".aqs")) {
-      interface_aqs = new InterfaceAQS();
-      param.use_aqs = true;
+      interface = std::make_shared<InterfaceAQS>();
    } else {
       std:cerr << "ERROR in converter. Unknown file type." << std::endl;
       exit(1);
    }
 
-   if (param.use_root)
-      interface_root->Initialise(file_name);
-   else if (param.use_aqs)
-      interface_aqs->Initialise(file_name);
+   interface->Initialise(file_name);
 
    // extract the file name from the input
    std::string file_in = param.inp_file;
@@ -91,20 +83,14 @@ int main(int argc, char **argv) {
    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
 
+   // define the output events number
    int Nevents;
-   if (param.use_root)
-      Nevents = interface_root->Scan();
-   else if (param.use_aqs)
-      Nevents = interface_aqs->Scan();
+   Nevents = interface->Scan();
    if (param.nevents > 0) {
       Nevents = std::min(Nevents, param.nevents);
    }
    for (auto i = 0; i < Nevents; ++i) {
-      if (param.use_root)
-         interface_root->GetEvent(i, PadAmpl);
-      else if (param.use_aqs)
-         interface_aqs->GetEvent(i, PadAmpl);
-
+      interface->GetEvent(i, PadAmpl);
       tree_out.Fill();
    }
 

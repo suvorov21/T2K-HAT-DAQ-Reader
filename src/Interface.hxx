@@ -1,6 +1,8 @@
 #ifndef Interface_hxx
 #define Interface_hxx
 
+#include <iostream>
+
 #include "TTree.h"
 #include "TFile.h"
 
@@ -20,8 +22,6 @@ typedef struct _Param
   unsigned int vflag;
   int sample_index_offset_zs;
   bool test = false;
-  bool use_root = false;
-  bool use_aqs = false;
   int verbose = 0;
   int nevents = -1;
 } Param;
@@ -33,11 +33,11 @@ public:
   virtual ~InterfaceBase() {;}
 
   /// Initialise the reader with file name
-  void Initialise(TString file_name) {};
+  virtual void Initialise(TString file_name) {};
   /// Scan and define the number of events
-  int Scan(int start=-1, bool refresh=true) {return 0;}
+  virtual int Scan(int start=-1, bool refresh=true) {return 0;}
   /// Get the data for the particular event
-  void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
+  virtual void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
 };
 
 /// AQS file reader
