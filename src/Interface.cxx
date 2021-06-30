@@ -14,9 +14,10 @@
 //******************************************************************************
 void InterfaceAQS::Initialise(TString file_namme) {
 //******************************************************************************
+  std::cout << "Initialise AQS interface" << std::endl;
   _param.fsrc = fopen(file_namme, "rb");
   _daq.loadDAQ();
-  cout << "... DAQ loaded successfully" << endl;
+  cout << "...DAQ loaded successfully" << endl;
 
   _T2K.loadMapping();
   cout << "...Mapping loaded succesfully." << endl;
@@ -108,8 +109,9 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   }
   if (refresh) {
     cout << "Scan done." << std::endl;
+    cout << _eventPos.size() << " events in the file." << std::endl;
   }
-    cout << _eventPos.size() << " events in the file..." << endl;
+
 
   return _eventPos.size();
 }
@@ -205,6 +207,7 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
 //******************************************************************************
 void InterfaceROOT::Initialise(TString file_namme) {
 //******************************************************************************
+  std::cout << "Initialise ROOT interface" << std::endl;
   _file_in = new TFile(file_namme.Data());
   _tree_in = (TTree*)_file_in->Get("tree");
 

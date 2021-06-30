@@ -149,6 +149,8 @@ EventDisplay::EventDisplay(const TGWindow *p,
   _total_canv->cd(2);
   _accum_time->Draw();
   _total_canv->Update();
+
+  std::cout << std::endl;
 };
 
 EventDisplay::~EventDisplay() {
@@ -186,7 +188,7 @@ void EventDisplay::DoDraw() {
   else if (_use_aqs)
     _interface_aqs->GetEvent(eventID, _padAmpl);
 
-  std::cout << "Event\t" << eventID << std::endl;
+  std::cout << "\rEvent\t" << eventID << " from " << Nevents << std::flush;
   MM->Reset();
   for (auto x = 0; x < geom::nPadx; ++x) {
     for (auto y = 0; y < geom::nPady; ++y) {
