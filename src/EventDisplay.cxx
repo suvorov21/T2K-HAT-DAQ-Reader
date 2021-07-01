@@ -171,7 +171,7 @@ void EventDisplay::DoDraw() {
 //******************************************************************************
   if (eventID >= Nevents) {
     std::cout << "EOF" << std::endl;
-    --eventID;
+    eventID = Nevents - 1;
     fNumber->SetIntNumber(eventID);
     return;
   }
