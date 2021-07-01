@@ -16,7 +16,7 @@ typedef struct _Param
 {
   char* inp_file;
   char* out_path;
-  FILE *fsrc;
+  FILE *fsrc = NULL;
   int has_no_run;
   int show_run;
   unsigned int vflag;
@@ -33,7 +33,7 @@ public:
   virtual ~InterfaceBase() {;}
 
   /// Initialise the reader with file name
-  virtual void Initialise(TString file_name, int verbose) {};
+  virtual bool Initialise(TString file_name, int verbose) {};
   /// Scan and define the number of events
   virtual int Scan(int start=-1, bool refresh=true) {return 0;}
   /// Get the data for the particular event
@@ -50,7 +50,7 @@ public:
   InterfaceAQS() {};
   InterfaceAQS(InterfaceBase var) {};
   virtual ~InterfaceAQS() {;}
-  void Initialise(TString file_name, int verbose);
+  bool Initialise(TString file_name, int verbose);
   int Scan(int start=-1, bool refresh=true);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 
@@ -73,7 +73,7 @@ public:
   InterfaceROOT() {;}
   InterfaceROOT(InterfaceBase var) {;}
   virtual ~InterfaceROOT() {;}
-  void Initialise(TString file_name, int verbose);
+  bool Initialise(TString file_name, int verbose);
   int Scan(int start=-1, bool refresh=true);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 

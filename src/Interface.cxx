@@ -12,7 +12,7 @@
 
 
 //******************************************************************************
-void InterfaceAQS::Initialise(TString file_namme, int verbose) {
+bool InterfaceAQS::Initialise(TString file_namme, int verbose) {
 //******************************************************************************
   _verbose = verbose;
   std::cout << "Initialise AQS interface" << std::endl;
@@ -23,6 +23,12 @@ void InterfaceAQS::Initialise(TString file_namme, int verbose) {
   _T2K.loadMapping();
   cout << "...Mapping loaded succesfully." << endl;
   _firstEv = -1;
+
+  if (_param.fsrc == NULL) {
+    std::cerr << "Input file could not be read" << std::endl;
+  }
+
+  return true;
 }
 
 //******************************************************************************
@@ -213,7 +219,7 @@ void InterfaceAQS::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samp
 }
 
 //******************************************************************************
-void InterfaceROOT::Initialise(TString file_namme, int verbose) {
+bool InterfaceROOT::Initialise(TString file_namme, int verbose) {
 //******************************************************************************
   std::cout << "Initialise ROOT interface" << std::endl;
   _verbose = verbose;
@@ -234,5 +240,8 @@ int InterfaceROOT::Scan(int start, bool refresh) {
 void InterfaceROOT::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
 //******************************************************************************
   _tree_in->GetEntry(i);
-  padAmpl = _PadAmpl;
+  for (int i = 0; i < geom::nPadx; ++i)
+         for (int j = 0; j < geom::nPady; ++j)
+            for (int t = 0; t < n::samples; ++t)
+               padAmpl[i][j][t] = _PadAmpl[i][j][t];
 }

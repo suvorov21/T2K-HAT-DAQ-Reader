@@ -10,12 +10,12 @@ make
 ## Converter
 Converts the AQS files to ROOT
 ```bash
-./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.root -o ./
+./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.aqs -o ./
 ```
 
 Number of events could be limited with
 ```bash
-./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.root -n 10 -o ./
+./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.aqs -n 10 -o ./
 ```
 
 ## EventMonitor

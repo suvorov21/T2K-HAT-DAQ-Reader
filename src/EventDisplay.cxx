@@ -60,7 +60,10 @@ EventDisplay::EventDisplay(const TGWindow *p,
   }
 
   // read the events number
-  _interface->Initialise(name, verbose);
+  if (!_interface->Initialise(name, verbose)) {
+      std::cerr << "Interface initialisation fails. Exit" << std::endl;
+      exit(1);
+  }
   Nevents = _interface->Scan();
 
   if (Nevents == 0) {
