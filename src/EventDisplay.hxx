@@ -74,6 +74,7 @@ private:
     TGTextButton* fPrevEvent;
     TGTextButton* fStartMon;
     TGTextButton* fGoToEnd;
+    TGTextButton* fLookThrough;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
@@ -89,6 +90,7 @@ private:
 
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
+
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
     virtual ~EventDisplay();
@@ -114,6 +116,12 @@ public:
     void DrawWF();
     /// Do the constant monitoring each N microseconds
     static void *Monitoring(void * ptr);
+    /// Scan through 100 events in a row
+    static void *LookThrough(void *ptr);
+
+    void LookThroughClick();
+
+    TThread *fLookThread;
 
     /// total number of events in the file
     int Nevents;

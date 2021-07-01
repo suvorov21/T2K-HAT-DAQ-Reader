@@ -120,6 +120,11 @@ EventDisplay::EventDisplay(const TGWindow *p,
 
   hfrm->AddFrame(fNumber, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
 
+  // look through the events
+  fLookThrough = new TGTextButton(hfrm, "        &Look through 50       ", 3);
+  fLookThrough->Connect("Clicked()" , "EventDisplay", this, "LookThroughClick()");
+  hfrm->AddFrame(fLookThrough, new TGLayoutHints(kLHintsCenterX | kLHintsLeft,
+                                              10, 10, 10, 10));
   // fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
   // fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
   // hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
@@ -138,6 +143,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
   MapWindow();
 
   fMonitoringThread = new TThread("monitoring", Monitoring, (void *)this);
+  fLookThread = new TThread("lookthrough", LookThrough, (void *)this);
 
   _total_canv = new TCanvas("Accumulation", "Accumulation", 800, 800, 700, 400);
   _total_canv->Divide(2);
@@ -405,3 +411,20 @@ void *EventDisplay::Monitoring(void *ptr) {
   }
   return NULL;
 }
+
+void EventDisplay::LookThroughClick(){
+  fLookThread->Run();
+}
+
+//******************************************************************************
+void *EventDisplay::LookThrough(void *ptr) {
+//******************************************************************************
+  EventDisplay *ED = (EventDisplay *)ptr;
+    for (auto i = 0; i < 50; ++i) {
+      ED->NextEvent();
+      usleep(200000);
+    }
+  ED->fLookThread->Kill();
+  return NULL;
+}
+
