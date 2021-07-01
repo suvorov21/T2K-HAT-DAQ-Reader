@@ -200,16 +200,12 @@ void EventDisplay::DoDraw() {
 
   // read event
   _interface->GetEvent(eventID, _padAmpl);
-  // if (_use_root)
-  //   _interface_root->GetEvent(eventID, _padAmpl);
-  // else if (_use_aqs)
-  //   _interface_aqs->GetEvent(eventID, _padAmpl);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents << std::flush;
   MM->Reset();
   for (auto x = 0; x < geom::nPadx; ++x) {
     for (auto y = 0; y < geom::nPady; ++y) {
-      auto max = 0;
+      auto max = 0.0001;
       auto maxt = -1;
       for (auto t = 0; t < n::samples; ++t) {
         int Q = 0;
@@ -220,7 +216,7 @@ void EventDisplay::DoDraw() {
           maxt = t;
         }
       } // over t
-      if (max) {
+      if (max > 0.0001 || _rb_palette) {
         MM->Fill(x, y, max);
         if (fill_gloabl) {
           _accum_ed->Fill(x, y, max);
