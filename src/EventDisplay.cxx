@@ -59,6 +59,8 @@ EventDisplay::EventDisplay(const TGWindow *p,
     exit(1);
   }
 
+  std::cout << "Opening file " << name << std::endl;
+
   // read the events number
   if (!_interface->Initialise(name, verbose)) {
       std::cerr << "Interface initialisation fails. Exit" << std::endl;

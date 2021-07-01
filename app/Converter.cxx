@@ -81,7 +81,12 @@ int main(int argc, char **argv) {
 
   string out_file = param.out_path + file_in + ".root";
 
-   TFile file_out(out_file.c_str(), "RECREATE");
+   TFile file_out(out_file.c_str(), "NEW");
+   if (!file_out.IsOpen()) {
+      std::cerr << "ROOT file could not be opend." << std::endl;
+      std::cerr << "File probably exists. Prevent overwriting" << std::endl;
+      exit(1);
+   }
    TTree tree_out("tree", "");
    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
@@ -92,7 +97,11 @@ int main(int argc, char **argv) {
    if (param.nevents > 0) {
       Nevents = std::min(Nevents, param.nevents);
    }
+   std::cout << "Doing conversion" << "\n[                    ]\r[" << std::flush;
+
    for (auto i = 0; i < Nevents; ++i) {
+      if (i % (Nevents/20) == 0)
+         std::cout << "#" << std::flush;
       interface->GetEvent(i, PadAmpl);
       tree_out.Fill();
    }
