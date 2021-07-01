@@ -35,8 +35,8 @@ EventDisplay::EventDisplay(const TGWindow *p,
 
   TString localStyleName = "T2K";
   int localWhichStyle = 1;
-  TStyle* t2kstyle = T2K().SetT2KStyle(localWhichStyle, localStyleName);
-  gROOT->SetStyle(t2kstyle->GetName());
+  _t2kstyle = T2K().SetT2KStyle(localWhichStyle, localStyleName);
+  gROOT->SetStyle(_t2kstyle->GetName());
   gROOT->ForceStyle();
 
   Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
@@ -123,7 +123,13 @@ EventDisplay::EventDisplay(const TGWindow *p,
   // look through the events
   fLookThrough = new TGTextButton(hfrm, "        &Look through 50       ", 3);
   fLookThrough->Connect("Clicked()" , "EventDisplay", this, "LookThroughClick()");
-  hfrm->AddFrame(fLookThrough, new TGLayoutHints(kLHintsCenterX | kLHintsLeft,
+  hfrm->AddFrame(fLookThrough, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+                                              10, 10, 10, 10));
+
+  // look through the events
+  fPallete = new TGTextButton(hfrm, "        &Paul's button       ", 3);
+  fPallete->Connect("Clicked()" , "EventDisplay", this, "PaletteClick()");
+  hfrm->AddFrame(fPallete, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
                                               10, 10, 10, 10));
   // fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
   // fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
@@ -400,6 +406,20 @@ void EventDisplay::GoToEnd() {
   NextEvent();
 }
 
+void EventDisplay::PaletteClick() {
+  if (!_rb_palette) {
+    _t2kstyle->SetPalette(1);
+    gROOT->SetStyle(_t2kstyle->GetName());
+    gROOT->ForceStyle();
+    _rb_palette = true;
+  } else {
+    _t2kstyle->SetPalette(kBird);
+    gROOT->SetStyle(_t2kstyle->GetName());
+    gROOT->ForceStyle();
+    _rb_palette = false;
+  }
+}
+
 //******************************************************************************
 void *EventDisplay::Monitoring(void *ptr) {
 //******************************************************************************
@@ -427,4 +447,7 @@ void *EventDisplay::LookThrough(void *ptr) {
   ED->fLookThread->Kill();
   return NULL;
 }
+
+
+
 

@@ -75,9 +75,12 @@ private:
     TGTextButton* fStartMon;
     TGTextButton* fGoToEnd;
     TGTextButton* fLookThrough;
+    TGTextButton* fPallete;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
+
+    bool _rb_palette = false;
 
     /// Accumulation canvas and histoes
     TCanvas* _total_canv;
@@ -90,6 +93,8 @@ private:
 
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
+
+    TStyle* _t2kstyle;
 
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
@@ -120,6 +125,8 @@ public:
     static void *LookThrough(void *ptr);
 
     void LookThroughClick();
+
+    void PaletteClick();
 
     TThread *fLookThread;
 
