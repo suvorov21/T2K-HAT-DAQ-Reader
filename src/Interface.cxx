@@ -36,7 +36,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   bool done = true;
   int prevEvnum = -1;
   int evnum;
-  if (_verbose > 0)
+  if (_verbose > 0 || refresh)
     std::cout << "\nScanning the file..." << std::endl;
   if (refresh) {
     _eventPos.clear();
