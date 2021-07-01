@@ -26,7 +26,7 @@ def main():
 
     for root, dirt, find_file in chain.from_iterable([os.walk(args.i)]):
         for file in find_file:
-            if ".aqs" in file:
+            if ".aqs" == file[-4:]:
                 print(f"Working on file {os.path.join(root, file)}")
                 subprocess.run([args.e, "-i", os.path.join(root, file), "-o", args.o], check=False)
 
