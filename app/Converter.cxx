@@ -97,19 +97,21 @@ int main(int argc, char **argv) {
    if (param.nevents > 0) {
       Nevents = std::min(Nevents, param.nevents);
    }
-   std::cout << "Doing conversion" << "\n[                    ]\r[" << std::flush;
+   std::cout << "Doing conversion" << "\n[                     ]\r[" << std::flush;
 
    for (auto i = 0; i < Nevents; ++i) {
-      if (i % (Nevents/20) == 0)
-         std::cout << "#" << std::flush;
-      interface->GetEvent(i, PadAmpl);
-      tree_out.Fill();
+      if (Nevents/20 > 0) {
+         if (i % (Nevents/20) == 0)
+            std::cout << "#" << std::flush;
+         interface->GetEvent(i, PadAmpl);
+         tree_out.Fill();
+      }
    }
 
    tree_out.Write();
    file_out.Write();
    file_out.Close();
-   std::cout << "Convertion done" << std::endl;
+   std::cout << "\nConvertion done" << std::endl;
 
    return 0;
 }
