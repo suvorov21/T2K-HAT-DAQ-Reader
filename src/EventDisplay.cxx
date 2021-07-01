@@ -427,7 +427,7 @@ void *EventDisplay::Monitoring(void *ptr) {
   EventDisplay *ED = (EventDisplay *)ptr;
   while (doMonitoring) {
     usleep(400000);
-    ED->eventID = ED->Nevents - 2;
+    ED->eventID = ED->Nevents - 7;
     ED->NextEvent();
   }
   return NULL;
