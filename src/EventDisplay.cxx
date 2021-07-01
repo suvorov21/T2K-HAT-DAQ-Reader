@@ -11,7 +11,7 @@
 #include "EventDisplay.hxx"
 #include <TGFileDialog.h>
 #include <TRootCanvas.h>
-#import "TStyle.h"
+#include "TStyle.h"
 #include "SetT2KStyle.hxx"
 
 #include "TThread.h"
