@@ -28,7 +28,7 @@ def main():
         for file in find_file:
             if ".aqs" in file:
                 print(f"Working on file {os.path.join(root, file)}")
-                subprocess.run([args.e, "-i", os.path.join(root, file), "-o", args.o], check=True)
+                subprocess.run([args.e, "-i", os.path.join(root, file), "-o", args.o], check=False)
 
 
 if __name__ == "__main__":
