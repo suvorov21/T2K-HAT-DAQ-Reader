@@ -242,9 +242,9 @@ void EventDisplay::DoDraw() {
 void EventDisplay::NextEvent() {
 //******************************************************************************
   ++eventID;
-  // re
+  // scan the rest of the file for new events
   if (doMonitoring)
-    _interface->Scan(Nevents-1, false);
+    Nevents = _interface->Scan(Nevents-1, false);
 
   fNumber->SetIntNumber(eventID);
   DoDraw();

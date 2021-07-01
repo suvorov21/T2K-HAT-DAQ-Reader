@@ -37,7 +37,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
   int prevEvnum = -1;
   int evnum;
   if (_verbose > 0)
-    std::cout << "Scanning the file..." << std::endl;
+    std::cout << "\nScanning the file..." << std::endl;
   if (refresh) {
     _eventPos.clear();
     fseek(_param.fsrc, 0, SEEK_SET);
