@@ -22,3 +22,5 @@ Number of events could be limited with
 ```bash
 ./app/Monitor -i ~/DATA/R2021_06_10-16_30_21-000.aqs
 ```
+
+The verbosity could be done with `-v1` flag. So far only one level of verbosity is available.
