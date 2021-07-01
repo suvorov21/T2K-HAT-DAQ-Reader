@@ -53,8 +53,8 @@ private:
     TH2F* MM;
     TH1F* WF[9];
     /// Time bounds for WF plotter
-    Int_t WFstart = 100;
-    Int_t WFend = 450;
+    Int_t WFstart = 0;
+    Int_t WFend = 500;
     /// amplitude bounds for the WF histoes
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
