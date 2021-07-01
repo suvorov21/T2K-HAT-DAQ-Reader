@@ -228,6 +228,8 @@ bool InterfaceROOT::Initialise(TString file_namme, int verbose) {
 
   _tree_in->SetBranchAddress("PadAmpl", _PadAmpl);
   std::cout << "Input read" << std::endl;
+
+  return true;
 }
 
 //******************************************************************************
