@@ -80,6 +80,7 @@ private:
     TGTextEntry* fEntry;
     TBox fbox;
 
+    /// Special Paul's palette
     bool _rb_palette = false;
 
     /// Accumulation canvas and histoes
@@ -87,6 +88,7 @@ private:
     TH2F* _accum_ed;
     TH1F* _accum_time;
 
+    /// WF display vars
     bool _clicked = false;
     int _x_clicked;
     int _y_clicked;
@@ -94,7 +96,11 @@ private:
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
 
+    /// Plot styking
     TStyle* _t2kstyle;
+
+    /// verbosity level
+    int _verbose;
 
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);

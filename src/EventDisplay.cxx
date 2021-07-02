@@ -32,6 +32,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
                            ) : TGMainFrame(p, w, h) {
 //******************************************************************************
   SetCleanup(kDeepCleanup);
+  _verbose = verbose;
 
   TString localStyleName = "T2K";
   int localWhichStyle = 1;
@@ -217,6 +218,9 @@ void EventDisplay::DoDraw() {
         }
       } // over t
       if (max > 0.0001 || _rb_palette) {
+        if (_verbose > 1) {
+          std::cout << "x:y:max\t" << x << "\t" << y << "\t" << max << std::endl;
+        }
         MM->Fill(x, y, max);
         if (fill_gloabl) {
           _accum_ed->Fill(x, y, max);
