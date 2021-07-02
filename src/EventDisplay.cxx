@@ -200,6 +200,8 @@ void EventDisplay::DoDraw() {
   bool fill_gloabl = (eventPrev != eventID);
 
   // read event
+  // WARNING due to some bug events MAY BE skipped qt the first read
+  _interface->GetEvent(eventID, _padAmpl);
   _interface->GetEvent(eventID, _padAmpl);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents << std::flush;
@@ -447,12 +449,8 @@ void *EventDisplay::LookThrough(void *ptr) {
   EventDisplay *ED = (EventDisplay *)ptr;
     for (auto i = 0; i < 50; ++i) {
       ED->NextEvent();
-      usleep(200000);
+      usleep(100000);
     }
   ED->fLookThread->Kill();
   return NULL;
 }
-
-
-
-
