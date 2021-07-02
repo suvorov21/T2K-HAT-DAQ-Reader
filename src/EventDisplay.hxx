@@ -79,6 +79,11 @@ private:
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
+    TGTextButton* fWF_range;
+    TGNumberEntry* fWF_start;
+    TGNumberEntry* fWF_end;
+    TGLabel *fLabel;
+
 
     /// Special Paul's palette
     bool _rb_palette = false;
@@ -130,9 +135,14 @@ public:
     /// Scan through 100 events in a row
     static void *LookThrough(void *ptr);
 
+    /// Look through 50 events
     void LookThroughClick();
 
+    /// Change the palette
     void PaletteClick();
+
+    /// Change the WF range
+    void ChangeWFrange();
 
     TThread *fLookThread;
 

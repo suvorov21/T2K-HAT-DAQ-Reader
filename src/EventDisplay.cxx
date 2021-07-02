@@ -132,7 +132,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
   hfrm->AddFrame(fLookThrough, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
                                               10, 10, 10, 10));
 
-  // look through the events
+  // shange the palette to Paul's favourite
   fPallete = new TGTextButton(hfrm, "        &Paul's button       ", 3);
   fPallete->Connect("Clicked()" , "EventDisplay", this, "PaletteClick()");
   hfrm->AddFrame(fPallete, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
@@ -141,6 +141,27 @@ EventDisplay::EventDisplay(const TGWindow *p,
   // fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
   // hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
   //                                             10, 10, 10, 10));
+
+  fWF_range = new TGTextButton(hfrm, "        &Apply       ", 3);
+  fWF_range->Connect("Clicked()" , "EventDisplay", this, "ChangeWFrange()");
+  hfrm->AddFrame(fWF_range, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+                                              10, 10, 10, 10));
+
+  fWF_end = new TGNumberEntry(hfrm, 500, 15,999, TGNumberFormat::kNESInteger,
+                              TGNumberFormat::kNEANonNegative,
+                              TGNumberFormat::kNELLimitMinMax,
+                              0, 99999);
+  hfrm->AddFrame(fWF_end, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+
+  fWF_start = new TGNumberEntry(hfrm, 0, 15,999, TGNumberFormat::kNESInteger,
+                              TGNumberFormat::kNEANonNegative,
+                              TGNumberFormat::kNELLimitMinMax,
+                              0, 99999);
+  hfrm->AddFrame(fWF_start, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+
+  fLabel = new TGLabel(hfrm, "WF range");
+  hfrm->AddFrame(fLabel, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+                                              10, 10, 10, 10));
 
 
   AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
@@ -413,7 +434,9 @@ void EventDisplay::GoToEnd() {
   NextEvent();
 }
 
+//******************************************************************************
 void EventDisplay::PaletteClick() {
+//******************************************************************************
   if (!_rb_palette) {
     _t2kstyle->SetPalette(1);
     gROOT->SetStyle(_t2kstyle->GetName());
@@ -425,6 +448,13 @@ void EventDisplay::PaletteClick() {
     gROOT->ForceStyle();
     _rb_palette = false;
   }
+}
+
+//******************************************************************************
+void EventDisplay::ChangeWFrange() {
+//******************************************************************************
+  WFstart = int(fWF_start->GetNumber());
+  WFend = int(fWF_end->GetNumber());
 }
 
 //******************************************************************************
