@@ -12,6 +12,8 @@
 #include "Mapping.h"
 #include "DAQ.h"
 
+static int tmp = -1;
+
 typedef struct _Param
 {
   char* inp_file;
@@ -35,7 +37,7 @@ public:
   /// Initialise the reader with file name
   virtual bool Initialise(TString file_name, int verbose) {};
   /// Scan and define the number of events
-  virtual int Scan(int start=-1, bool refresh=true) {return 0;}
+  virtual int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp) {return 0;}
   /// Get the data for the particular event
   virtual void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
 
@@ -51,7 +53,7 @@ public:
   InterfaceAQS(InterfaceBase var) {};
   virtual ~InterfaceAQS() {;}
   bool Initialise(TString file_name, int verbose);
-  int Scan(int start=-1, bool refresh=true);
+  int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 
 private:
@@ -74,7 +76,7 @@ public:
   InterfaceROOT(InterfaceBase var) {;}
   virtual ~InterfaceROOT() {;}
   bool Initialise(TString file_name, int verbose);
-  int Scan(int start=-1, bool refresh=true);
+  int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp);
   void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
 
 private:

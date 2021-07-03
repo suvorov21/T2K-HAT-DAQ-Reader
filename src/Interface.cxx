@@ -32,7 +32,7 @@ bool InterfaceAQS::Initialise(TString file_namme, int verbose) {
 }
 
 //******************************************************************************
-int InterfaceAQS::Scan(int start, bool refresh) {
+int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
   // Reset _eventPos vector
   // Scan the file
@@ -122,7 +122,7 @@ int InterfaceAQS::Scan(int start, bool refresh) {
     cout << _eventPos.size() << " events in the file." << std::endl;
   }
 
-
+  Nevents_run = prevEvnum;
   return _eventPos.size();
 }
 
@@ -233,8 +233,9 @@ bool InterfaceROOT::Initialise(TString file_namme, int verbose) {
 }
 
 //******************************************************************************
-int InterfaceROOT::Scan(int start, bool refresh) {
+int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
+  Nevents_run = -1;
   return _tree_in->GetEntries();
 }
 

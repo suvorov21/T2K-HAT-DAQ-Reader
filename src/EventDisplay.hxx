@@ -107,6 +107,9 @@ private:
     /// verbosity level
     int _verbose;
 
+    /// Number of events in the run
+    int _Nevents_run;
+
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
     virtual ~EventDisplay();

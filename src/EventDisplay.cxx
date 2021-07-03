@@ -225,7 +225,8 @@ void EventDisplay::DoDraw() {
   _interface->GetEvent(eventID, _padAmpl);
   _interface->GetEvent(eventID, _padAmpl);
 
-  std::cout << "\rEvent\t" << eventID << " from " << Nevents << std::flush;
+  std::cout << "\rEvent\t" << eventID << " from " << Nevents;
+  std::cout << " in the file (" << _Nevents_run << ") in run in total" << std::flush;
   MM->Reset();
   for (auto x = 0; x < geom::nPadx; ++x) {
     for (auto y = 0; y < geom::nPady; ++y) {
@@ -284,7 +285,7 @@ void EventDisplay::NextEvent() {
   ++eventID;
   // scan the rest of the file for new events
   if (doMonitoring)
-    Nevents = _interface->Scan(Nevents-1, false);
+    Nevents = _interface->Scan(Nevents-1, false, _Nevents_run);
 
   fNumber->SetIntNumber(eventID);
   DoDraw();
