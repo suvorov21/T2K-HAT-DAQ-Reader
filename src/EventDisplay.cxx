@@ -226,7 +226,7 @@ void EventDisplay::DoDraw() {
   _interface->GetEvent(eventID, _padAmpl);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents;
-  std::cout << " in the file (" << _Nevents_run << ") in run in total" << std::flush;
+  std::cout << " in the file (" << _Nevents_run << " in run in total)" << std::flush;
   MM->Reset();
   for (auto x = 0; x < geom::nPadx; ++x) {
     for (auto y = 0; y < geom::nPady; ++y) {
