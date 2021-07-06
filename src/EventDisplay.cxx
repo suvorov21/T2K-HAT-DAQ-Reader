@@ -133,6 +133,12 @@ EventDisplay::EventDisplay(const TGWindow *p,
                                               10, 10, 10, 10));
 
   // shange the palette to Paul's favourite
+  fTimeMode = new TGTextButton(hfrm, "        &Time Mode       ", 3);
+  fTimeMode->Connect("Clicked()" , "EventDisplay", this, "TimeModeClick()");
+  hfrm->AddFrame(fTimeMode, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+                                              10, 10, 10, 10));
+
+  // shange the palette to Paul's favourite
   fPallete = new TGTextButton(hfrm, "        &Paul's button       ", 3);
   fPallete->Connect("Clicked()" , "EventDisplay", this, "PaletteClick()");
   hfrm->AddFrame(fPallete, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
@@ -245,7 +251,13 @@ void EventDisplay::DoDraw() {
         if (_verbose > 1) {
           std::cout << "x:y:max\t" << x << "\t" << y << "\t" << max << std::endl;
         }
-        MM->Fill(x, y, max);
+        if (fIsTimeModeOn){
+          MM->Fill(x, y, maxt);
+        }
+        else {
+          MM->Fill(x, y, max);
+
+        }
         if (fill_gloabl) {
           _accum_ed->Fill(x, y, max);
           _accum_time->Fill(maxt);
@@ -257,6 +269,10 @@ void EventDisplay::DoDraw() {
   }
   f_ED_canvas->cd();
   gStyle->SetOptStat(0);
+
+  //gROOT->ForceStyle();
+  _t2kstyle->SetPalette(fPaletteMM);
+  gROOT->SetStyle(_t2kstyle->GetName());
   MM->Draw("colz");
   /** Whether to draw the pad borders */
   MM->GetXaxis()->SetNdivisions(38);
@@ -265,9 +281,14 @@ void EventDisplay::DoDraw() {
   MM->GetYaxis()->SetNdivisions(36);
   /** end of block*/
 
+  _t2kstyle->SetPalette(fPaletteMM);
+  gROOT->SetStyle(_t2kstyle->GetName());
   gPad->SetGrid();
   f_ED_canvas->Update();
 
+  auto oldStyle = _rb_palette ? 1 : kBird;
+  _t2kstyle->SetPalette(oldStyle);
+  gROOT->SetStyle(_t2kstyle->GetName());
   _total_canv->cd(1);
   _accum_ed->Draw("colz");
   _total_canv->cd(2);
@@ -383,6 +404,9 @@ TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
   fbox.SetLineColor(kRed);
   fbox.SetLineWidth(3);
   fbox.Draw();
+
+  _t2kstyle->SetPalette(fPaletteMM);
+  gROOT->SetStyle(_t2kstyle->GetName());
   f_ED_canvas->Modified();
   f_ED_canvas->Update();
 
@@ -422,6 +446,9 @@ void EventDisplay::DrawWF() {
   fbox.SetLineColor(kRed);
   fbox.SetLineWidth(3);
   fbox.Draw();
+
+  _t2kstyle->SetPalette(fPaletteMM);
+  gROOT->SetStyle(_t2kstyle->GetName());
   f_ED_canvas->Modified();
   f_ED_canvas->Update();
 
@@ -434,6 +461,26 @@ void EventDisplay::GoToEnd() {
   eventID = Nevents - 3;
   NextEvent();
 }
+
+void EventDisplay::TimeModeClick() {
+  if (!fIsTimeModeOn){
+    std::cout << "Setting to time mode" << std::endl;
+    fPaletteMM = kInvertedDarkBodyRadiator;
+    //_t2kstyle->SetPalette(kInvertedDarkBodyRadiator);
+    //gROOT->SetStyle(_t2kstyle->GetName());
+    //gROOT->ForceStyle();
+    fIsTimeModeOn = true;
+  }
+  else {
+    std::cout << "Setting to charge mode" << std::endl;
+    fPaletteMM = kBird;
+    _t2kstyle->SetPalette(kBird);
+    gROOT->SetStyle(_t2kstyle->GetName());
+    gROOT->ForceStyle();
+    fIsTimeModeOn = false;
+  }
+}
+
 
 //******************************************************************************
 void EventDisplay::PaletteClick() {
