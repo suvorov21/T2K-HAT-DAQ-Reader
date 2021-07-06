@@ -19,6 +19,7 @@
 #include <Getline.h>
 #include <TFile.h>
 #include <TString.h>
+#include "TStyle.h"
 #include "TBox.h"
 #include "TGNumberEntry.h"
 #include "TGTextEntry.h"
@@ -76,6 +77,7 @@ private:
     TGTextButton* fGoToEnd;
     TGTextButton* fLookThrough;
     TGTextButton* fPallete;
+    TGTextButton* fTimeMode;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
@@ -84,6 +86,9 @@ private:
     TGNumberEntry* fWF_end;
     TGLabel *fLabel;
 
+    /// Time mode
+    bool fIsTimeModeOn = false;
+    int fPaletteMM = kBird; // should be kBird when charge and kInvertedDarkBodyRadiator if in time mode
 
     /// Special Paul's palette
     bool _rb_palette = false;
@@ -143,6 +148,9 @@ public:
 
     /// Change the palette
     void PaletteClick();
+
+    /// Change to Time mode (instead of charge mode)
+    void TimeModeClick();
 
     /// Change the WF range
     void ChangeWFrange();
