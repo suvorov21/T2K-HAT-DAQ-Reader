@@ -225,8 +225,19 @@ bool InterfaceROOT::Initialise(TString file_namme, int verbose) {
   _verbose = verbose;
   _file_in = new TFile(file_namme.Data());
   _tree_in = (TTree*)_file_in->Get("tree");
+  _use511 = false;
 
-  _tree_in->SetBranchAddress("PadAmpl", _PadAmpl);
+  TString branch_name = _tree_in->GetBranch("PadAmpl")->GetTitle();
+
+  if (branch_name.Contains("[510]")) {
+    _tree_in->SetBranchAddress("PadAmpl", _PadAmpl);
+  } else if (branch_name.Contains("[511]")) {
+    _use511 = true;
+    _tree_in->SetBranchAddress("PadAmpl", _PadAmpl_511);
+  } else {
+    std::cerr << "ERROR in InterfaceROOT::Initialise()" << std::endl;
+    exit(1);
+  }
   std::cout << "Input read" << std::endl;
 
   return true;
@@ -246,5 +257,8 @@ void InterfaceROOT::GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::sam
   for (int i = 0; i < geom::nPadx; ++i)
          for (int j = 0; j < geom::nPady; ++j)
             for (int t = 0; t < n::samples; ++t)
-               padAmpl[i][j][t] = _PadAmpl[i][j][t];
+              if (_use511)
+                padAmpl[i][j][t] = _PadAmpl_511[i][j][t];
+              else
+                padAmpl[i][j][t] = _PadAmpl[i][j][t];
 }

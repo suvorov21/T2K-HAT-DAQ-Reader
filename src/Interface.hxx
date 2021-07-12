@@ -83,6 +83,8 @@ private:
   TFile *_file_in;
   TTree *_tree_in;
   int _PadAmpl[geom::nPadx][geom::nPady][n::samples];
+  int _PadAmpl_511[geom::nPadx][geom::nPady][511];
+  bool _use511;
 };
 
 #endif
