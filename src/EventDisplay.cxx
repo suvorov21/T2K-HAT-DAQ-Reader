@@ -1,5 +1,3 @@
-
-
 #include <TApplication.h>
 #include <TGClient.h>
 #include <TCanvas.h>
@@ -67,7 +65,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
       std::cerr << "Interface initialisation fails. Exit" << std::endl;
       exit(1);
   }
-  Nevents = _interface->Scan();
+  Nevents = _interface->Scan(-1, true, tmp);
 
   if (Nevents == 0) {
     std::cerr << "Empty file!" << std::endl;
@@ -75,13 +73,13 @@ EventDisplay::EventDisplay(const TGWindow *p,
   }
 
   // ini GUI
-  TGHorizontalFrame* fMain = new TGHorizontalFrame(this, w, h);
+  auto* fMain = new TGHorizontalFrame(this, w, h);
   fED = new TRootEmbeddedCanvas("glec1", fMain, 700, 500);
   fWF = new TRootEmbeddedCanvas("glec2", fMain, 700, 500);
 
   fMain->AddFrame(fED, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
   fMain->AddFrame(fWF, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-  TGHorizontalFrame *hfrm = new TGHorizontalFrame(this, 10, 10);
+  auto *hfrm = new TGHorizontalFrame(this, 10, 10);
 
   f_WF_canvas = fWF->GetCanvas();
   f_WF_canvas->Clear();

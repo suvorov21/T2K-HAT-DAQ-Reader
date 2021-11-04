@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
    // define the output events number
    int Nevents;
-   Nevents = interface->Scan();
+   Nevents = interface->Scan(-1, true, tmp);
    if (param.nevents > 0) {
       Nevents = std::min(Nevents, param.nevents);
    }

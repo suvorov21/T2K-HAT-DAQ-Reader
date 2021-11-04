@@ -18,7 +18,7 @@ typedef struct _Param
 {
   char* inp_file;
   char* out_path;
-  FILE *fsrc = NULL;
+  FILE *fsrc = nullptr;
   int has_no_run;
   int show_run;
   unsigned int vflag;
@@ -31,15 +31,15 @@ typedef struct _Param
 /// Base interface class
 class InterfaceBase {
 public:
-  InterfaceBase() {;}
-  virtual ~InterfaceBase() {;}
+  InterfaceBase(): _verbose(0) {}
+  virtual ~InterfaceBase() = default;
 
   /// Initialise the reader with file name
-  virtual bool Initialise(TString file_name, int verbose) {};
+  virtual bool Initialise(TString& file_name, int verbose) {return false;}
   /// Scan and define the number of events
-  virtual int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp) {return 0;}
+  virtual long int Scan(int start, bool refresh, int& Nevents_run) {return 0;}
   /// Get the data for the particular event
-  virtual void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
+  virtual void GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
 
 protected:
   /// verbosity level
@@ -50,11 +50,11 @@ protected:
 class InterfaceAQS: public InterfaceBase {
 public:
   InterfaceAQS() {};
-  InterfaceAQS(InterfaceBase var) {};
-  virtual ~InterfaceAQS() {;}
-  bool Initialise(TString file_name, int verbose);
-  int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp);
-  void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
+//  InterfaceAQS(const InterfaceBase& var) {};
+  ~InterfaceAQS() override = default;
+  bool Initialise(TString& file_name, int verbose) override;
+  long int Scan(int start, bool refresh, int& Nevents_run) override;
+  void GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) override;
 
 private:
   Features _fea;
@@ -63,27 +63,27 @@ private:
   DatumContext _dc;
   Param _param;
   DAQ _daq;
-  Mapping _T2K;
+  Mapping _t2k;
 
   int _firstEv;
-  int _PadAmpl[geom::nPadx][geom::nPady][n::samples];
+  int _padAmpl[geom::nPadx][geom::nPady][n::samples];
 };
 
 /// ROOT file reader
 class InterfaceROOT: public InterfaceBase {
 public:
-  InterfaceROOT() {;}
-  InterfaceROOT(InterfaceBase var) {;}
-  virtual ~InterfaceROOT() {;}
-  bool Initialise(TString file_name, int verbose);
-  int Scan(int start=-1, bool refresh=true, int& Nevents_run=tmp);
-  void GetEvent(int i, int padAmpl[geom::nPadx][geom::nPady][n::samples]);
+  InterfaceROOT() {}
+//  InterfaceROOT(const InterfaceBase& var) {}
+  ~InterfaceROOT() override = default;
+  bool Initialise(TString& file_name, int verbose) override;
+  long int Scan(int start, bool refresh, int& Nevents_run) override;
+  void GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) override;
 
 private:
   TFile *_file_in;
   TTree *_tree_in;
-  int _PadAmpl[geom::nPadx][geom::nPady][n::samples];
-  int _PadAmpl_511[geom::nPadx][geom::nPady][511];
+  int _padAmpl[geom::nPadx][geom::nPady][n::samples];
+  int _padAmpl_511[geom::nPadx][geom::nPady][511];
   bool _use511;
 };
 
