@@ -17,6 +17,7 @@ void help()
   printf("   -n <Value>           : spesify the number of events");
   printf("   -v <level>           : verbose\n");
   printf("   -t                   : test converter workability - run iver 30 first events\n");
+  printf("   -s <tracker_file>    : embed info from the external tracker");
   printf("   -f <0xFlags>         : flags to determine printed items\n");
   exit(1);
 }
@@ -24,30 +25,26 @@ void help()
 // ******************************************************************************
 // parse_cmd_args() to parse command line arguments
 // ******************************************************************************
-int parse_cmd_args(int argc, char **argv, Param *p)
-{
-  /*int i;
-  int match = 0;
-  int err = 0;*/
-
+int parse_cmd_args(int argc, char **argv, Param *p) {
   for (;;) {
-    int c = getopt(argc, argv, "i:o:p:n:ht");
+    int c = getopt(argc, argv, "i:o:v:p:n:hts:");
     if (c < 0) break;
     switch (c) {
-      case 'i' : p->inp_file          = optarg;       break;
-      case 'o' : p->out_path          = optarg;       break;
-      case 'v' : p->verbose              = atoi(optarg); break;
-      case 't' : p->test              = true;         break;
+      case 'i' : p->inp_file                = optarg;       break;
+      case 'o' : p->out_path                = optarg;       break;
+      case 'v' : p->verbose                 = atoi(optarg); break;
+      case 't' : p->test                    = true;         break;
       case 'f' : p->vflag                   = atoi(optarg); break;
       case 'p' : p->sample_index_offset_zs  = atoi(optarg); break;
-      case 'n' : p->nevents              = atoi(optarg); break;
-      case '?' : help();
+      case 's' : p->tracker_file            = optarg;       break;
+      case 'n' : p->nevents                 = atoi(optarg); break;
+      default : help();
     }
   }
   if (argc == 1)
     help();
 
-  return (0);
+  return 0;
 }
 
 int main(int argc, char **argv) {
@@ -64,7 +61,7 @@ int main(int argc, char **argv) {
    } else if (file_name.EndsWith(".aqs")) {
       interface = std::make_shared<InterfaceAQS>();
    } else {
-      std:cerr << "ERROR in converter. Unknown file type." << std::endl;
+      std::cerr << "ERROR in converter. Unknown file type." << std::endl;
       exit(1);
    }
 
@@ -73,15 +70,25 @@ int main(int argc, char **argv) {
       exit(1);
    }
 
+   bool read_tracker = false;
+   auto tracker = std::make_shared<InterfaceTracker>();
+   if (strcmp(param.tracker_file, "") != 0) {
+     TString tracker_name = TString(param.tracker_file);
+     read_tracker = tracker->Initialise(tracker_name, param.verbose);
+     if (!read_tracker)
+       std::cerr << "Tracker file is specified, but could not be opened" << std::endl;
+   }
+
    // extract the file name from the input
    std::string file_in = param.inp_file;
-   while (file_in.find("/") != string::npos)
-      file_in = file_in.substr(file_in.find("/") + 1);
-   file_in = file_in.substr(0, file_in.find("."));
+   while (file_in.find('/') != string::npos)
+      file_in = file_in.substr(file_in.find('/') + 1);
+   file_in = file_in.substr(0, file_in.find('.'));
 
   string out_file = param.out_path + file_in + ".root";
 
-   TFile file_out(out_file.c_str(), "NEW");
+  // create output file
+  TFile file_out(out_file.c_str(), "NEW");
    if (!file_out.IsOpen()) {
       std::cerr << "ROOT file could not be opend." << std::endl;
       std::cerr << "File probably exists. Prevent overwriting" << std::endl;
@@ -89,29 +96,52 @@ int main(int argc, char **argv) {
    }
    TTree tree_out("tree", "");
    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
+   float TrackerPos[8];
    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
+   if (read_tracker)
+    tree_out.Branch("Tracker", &TrackerPos, Form("TrackerPos[8]/F"));
 
    // define the output events number
-   int Nevents;
+   long int Nevents;
    Nevents = interface->Scan(-1, true, tmp);
-   if (param.nevents > 0) {
-      Nevents = std::min(Nevents, param.nevents);
+
+   if (read_tracker) {
+     long int N_tracker = tracker->Scan(-1, true, tmp);
+     std::cout << N_tracker << " events in the tracker file" << std::endl;
+     // overflow by 1 is allowed by trigger design
+     if (N_tracker - 1 > Nevents)
+       std::cerr << "Number of events in tracker is larger then in TPC" << std::endl;
    }
-   std::cout << "Doing conversion" << "\n[                     ]\r[" << std::flush;
+  if (param.nevents > 0) {
+    Nevents = std::min(Nevents, (long int)param.nevents);
+  }
+  if (!param.verbose)
+    std::cout << "Doing conversion" << "\n[                     ]\r[" << std::flush;
 
-   for (auto i = 0; i < Nevents; ++i) {
-      if (Nevents/20 > 0) {
-         if (i % (Nevents/20) == 0)
-            std::cout << "#" << std::flush;
-         interface->GetEvent(i, PadAmpl);
-         tree_out.Fill();
-      }
+  std::vector<float> tracker_data;
+  for (long int i = 0; i < Nevents; ++i) {
+   if (param.verbose)
+     std::cout << "Working on " << i << std::endl;
+   else if (Nevents/20 > 0) {
+     if (i % (Nevents / 20) == 0)
+       std::cout << "#" << std::flush;
    }
+   interface->GetEvent(i, PadAmpl);
+   tracker_data.clear();
+   for (float & data : TrackerPos)
+     data = -999.;
+     if (tracker->GetEvent(i, tracker_data)) {
+       for (auto it = 0;  it < tracker_data.size(); ++it)
+         if (tracker_data[it] > 0)
+           TrackerPos[it] = tracker_data[it];
+     }
+     tree_out.Fill();
+  }
 
-   tree_out.Write();
-   file_out.Write();
-   file_out.Close();
-   std::cout << "\nConvertion done" << std::endl;
+  tree_out.Write("", TObject::kOverwrite);
+  file_out.Write();
+  file_out.Close();
+  std::cout << "\nConversion done" << std::endl;
 
-   return 0;
+  return 0;
 }

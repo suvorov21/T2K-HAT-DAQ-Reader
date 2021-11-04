@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 //******************************************************************************
 bool InterfaceAQS::Initialise(TString& file_namme, int verbose) {
@@ -120,7 +121,7 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceAQS::GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
+void InterfaceAQS::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
 //******************************************************************************
   unsigned short datum;
   int err;
@@ -239,7 +240,7 @@ long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceROOT::GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
+void InterfaceROOT::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
 //******************************************************************************
   _tree_in->GetEntry(id);
   for (int i = 0; i < geom::nPadx; ++i)
@@ -249,4 +250,90 @@ void InterfaceROOT::GetEvent(int id, int padAmpl[geom::nPadx][geom::nPady][n::sa
                 padAmpl[i][j][t] = _padAmpl_511[i][j][t];
               else
                 padAmpl[i][j][t] = _padAmpl[i][j][t];
+}
+
+InterfaceTracker::~InterfaceTracker() {
+  if (_file.is_open())
+    _file.close();
+}
+
+//******************************************************************************
+bool InterfaceTracker::Initialise(TString &file_name, int verbose) {
+//******************************************************************************
+  _file.open(file_name);
+  _verbose = verbose;
+  if (!_file.is_open())
+    return false;
+  return true;
+}
+
+//******************************************************************************
+long int InterfaceTracker::Scan(int start, bool refresh, int& Nevents_run) {
+//******************************************************************************
+//  return std::count(std::istreambuf_iterator<char>(_file),
+//                    std::istreambuf_iterator<char>(), '\n');
+  std::string line_str;
+  int line = -1;
+  while(getline(_file, line_str)) {
+    ++line;
+    istringstream ss(line_str);
+    float x1, y1, x2, y2;
+    int fake;
+    int event;
+    ss >> x1 >> y1 >> x2 >> y2;
+    for (auto i = 0; i < 66; ++i)
+      ss >> fake;
+    ss >> event;
+    // thanks to fortran, event number starts from 1;
+    --event;
+    _eventPos[event] = line;
+    if (_verbose) {
+      std::cout << "Event " << event << " found at line " << line << std::endl;
+      std::cout << x1 << "\t" << y1 << "\t" << x2 << "\t" << y2 << std::endl;
+    }
+  }
+  return line;
+}
+
+void InterfaceTracker::GotoEvent(unsigned int num) {
+  _file.clear();
+  _file.seekg(std::ios::beg);
+  for (int i = 0; i < num; ++i){
+//    _file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+    std::string line_str;
+    getline(_file, line_str);
+  }
+}
+
+bool InterfaceTracker::HasEvent(long int id) {
+  return _eventPos.find(id) != _eventPos.end();
+}
+
+//******************************************************************************
+bool InterfaceTracker::GetEvent(long int id, std::vector<float>& data) {
+//******************************************************************************
+  if (!HasEvent(id))
+    return false;
+
+  GotoEvent(_eventPos[id]);
+  if (_verbose)
+    std::cout << "Reading tracker data for event " << id << std::endl;
+  std::string line_str;
+  getline(_file, line_str);
+  istringstream ss(line_str);
+  float x1{-1}, y1{-1}, x2{-1}, y2{-1}, x3{-1}, y3{-1}, x4{-1}, y4{-1};
+  int fake;
+  int event;
+  ss >> x1 >> y1 >> x2 >> y2 >> x3 >> y3 >> x4 >> y4;
+  for (auto i = 0; i < 62; ++i)
+    ss >> fake;
+  ss >> event;
+  if (event - 1 != id)
+    throw std::logic_error("Event number mismatch " +  \
+                            std::to_string(event-1) + " " + \
+                            std::to_string(id)
+                            );
+  data.insert(data.end(), {x1, y1, x2, y2, x3, y3, x4, y4});
+
+  return true;
 }

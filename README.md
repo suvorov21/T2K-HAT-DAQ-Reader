@@ -24,6 +24,11 @@ Number of events could be limited with
 ./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.aqs -n 10 -o ./
 ```
 
+The ASCII data from silicon tracker can be embedded with
+```bash
+./app/Converter -i ~/DATA/R2019_06_16-19_45_58-000.aqs -n 10 -o ./ -s tracker_analysis_output.dat
+```
+
 The routine can be automated with python script
 ```bash
 python3 ./script/converter.py -e build/app/Converter -i /input_dir/aqs -o /output/ROOT/
