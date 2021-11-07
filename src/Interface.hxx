@@ -27,7 +27,7 @@ typedef struct _Param
   bool test = false;
   int verbose = 0;
   int nevents = -1;
-  char* tracker_file;
+  char* tracker_file = "";
 } Param;
 
 /// Base interface class

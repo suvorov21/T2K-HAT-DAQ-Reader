@@ -12,7 +12,7 @@ void help()
   printf("fdecoder <options>\n");
   printf("   -h                   : print usage\n");
   printf("   -i <input_file>      : input file name with a path\n");
-  printf("   -o <output_path>     : output files path\n");
+  printf("   -o <output_path>     : output files path (default='.')\n");
   printf("   -p <Value>           : number of pre-samples below threshold in zero-suppressed mode\n");
   printf("   -n <Value>           : spesify the number of events");
   printf("   -v <level>           : verbose\n");
