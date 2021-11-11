@@ -28,6 +28,7 @@
 #include "TH2F.h"
 #include "Interface.hxx"
 #include "TThread.h"
+#include "TGraphErrors.h"
 
 
 class IDList
@@ -97,6 +98,10 @@ private:
     TCanvas* _total_canv;
     TH2F* _accum_ed;
     TH1F* _accum_time;
+
+    /// Tracker info
+    TCanvas* _tracker_canv;
+    TGraphErrors* _tracker[4];
 
     /// WF display vars
     bool _clicked = false;

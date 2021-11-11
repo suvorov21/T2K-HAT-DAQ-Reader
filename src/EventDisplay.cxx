@@ -192,6 +192,11 @@ EventDisplay::EventDisplay(const TGWindow *p,
   _accum_time->Draw();
   _total_canv->Update();
 
+  _tracker_canv = new TCanvas("Tracker", "Tracker", 0, 800, 400, 400);
+  _tracker_canv->Divide(2, 2);
+  for (auto & tr : _tracker)
+    tr = new TGraphErrors();
+
   std::cout << std::endl;
 };
 
@@ -293,6 +298,22 @@ void EventDisplay::DoDraw() {
   _accum_time->Draw();
   _total_canv->Update();
 
+  if (_interface->HasTracker()) {
+    Float_t pos[8];
+    _interface->GetTrackerEvent(eventID, pos);
+    for (auto& tr : _tracker)
+      tr->Set(0);
+
+    for (auto i = 0; i < 4; ++i) {
+      _tracker[i]->Set(0);
+      _tracker[i]->SetPoint(0, pos[i*2], pos[i*2 + 1]);
+      _tracker_canv->cd(i+1);
+      gPad->DrawFrame(0, 0, 10, 10);
+      _tracker[i]->Draw("p");
+    }
+    _tracker_canv->Update();
+  }
+
   if (_clicked)
     DrawWF();
 
@@ -341,7 +362,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
                                      TObject *selected
                                      ) {
 //******************************************************************************
-TCanvas *f_WF_canvas = (TCanvas *)gTQSender;
+  auto *f_WF_canvas = (TCanvas *)gTQSender;
   if (event != 1)
     return;
   TString s = selected->GetObjectInfo(px,py);
@@ -506,13 +527,13 @@ void EventDisplay::ChangeWFrange() {
 //******************************************************************************
 void *EventDisplay::Monitoring(void *ptr) {
 //******************************************************************************
-  EventDisplay *ED = (EventDisplay *)ptr;
+  auto *ED = (EventDisplay *)ptr;
   while (doMonitoring) {
     usleep(400000);
     ED->eventID = ED->Nevents - 7;
     ED->NextEvent();
   }
-  return NULL;
+  return nullptr;
 }
 
 void EventDisplay::LookThroughClick(){
@@ -522,11 +543,11 @@ void EventDisplay::LookThroughClick(){
 //******************************************************************************
 void *EventDisplay::LookThrough(void *ptr) {
 //******************************************************************************
-  EventDisplay *ED = (EventDisplay *)ptr;
+  auto *ED = (EventDisplay *)ptr;
     for (auto i = 0; i < 50; ++i) {
       ED->NextEvent();
       usleep(100000);
     }
   ED->fLookThread->Kill();
-  return NULL;
+  return nullptr;
 }

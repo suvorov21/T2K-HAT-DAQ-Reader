@@ -227,6 +227,12 @@ bool InterfaceROOT::Initialise(TString& file_name, int verbose) {
     std::cerr << "ERROR in InterfaceROOT::Initialise()" << std::endl;
     exit(1);
   }
+
+  if (_tree_in->GetBranch("Tracker")) {
+    _has_tracker = true;
+    std::cout << "Has tracker" << std::endl;
+    _tree_in->SetBranchAddress("Tracker", _pos);
+  }
   std::cout << "Input read" << std::endl;
 
   return true;
@@ -250,6 +256,14 @@ void InterfaceROOT::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][
                 padAmpl[i][j][t] = _padAmpl_511[i][j][t];
               else
                 padAmpl[i][j][t] = _padAmpl[i][j][t];
+
+
+}
+
+void InterfaceROOT::GetTrackerEvent(long int id, Float_t* pos) {
+  _tree_in->GetEntry(id);
+  for (int i = 0; i < 8; ++i)
+    pos[i] = _pos[i];
 }
 
 InterfaceTracker::~InterfaceTracker() {

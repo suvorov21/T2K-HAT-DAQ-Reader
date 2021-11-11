@@ -47,9 +47,13 @@ public:
   /// Get the data for the particular event
   virtual void GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
 
+  bool HasTracker() const {return _has_tracker;}
+  virtual void GetTrackerEvent(long int id, Float_t pos[8]) {}
+
 protected:
   /// verbosity level
   int _verbose;
+  bool _has_tracker{false};
 };
 
 /// AQS file reader
@@ -82,6 +86,7 @@ public:
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
   void GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) override;
+  void GetTrackerEvent(long int id, Float_t* pos) override;
 
 private:
   TFile *_file_in;
@@ -89,6 +94,8 @@ private:
   int _padAmpl[geom::nPadx][geom::nPady][n::samples];
   int _padAmpl_511[geom::nPadx][geom::nPady][511];
   bool _use511;
+
+  Float_t _pos[8];
 };
 
 /// Silicon tracker file reader
