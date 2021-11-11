@@ -11,16 +11,22 @@ from itertools import chain
 def main():
     parser = argparse.ArgumentParser(description='Event convertion AQS --> ROOT')
     parser.add_argument("-i", metavar="input_dir", type=str,
-        help='Input directory',
-        required=True)
+                        help='Input directory',
+                        required=True,
+                        dest='input_dir'
+                        )
 
     parser.add_argument("-o", metavar="output_dir", type=str,
-        help='output directory',
-        required=True)
+                        help='output directory',
+                        required=True,
+                        dest='output_dir'
+                        )
 
     parser.add_argument("-e", metavar="executable", type=str,
-        help='Converter executable',
-        required=True)
+                        help='Converter executable',
+                        required=True,
+                        dest='executable'
+                        )
 
     args = parser.parse_args()
 
