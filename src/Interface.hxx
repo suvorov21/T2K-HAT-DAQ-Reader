@@ -45,10 +45,14 @@ public:
   //! \return
   virtual long int Scan(int start, bool refresh, int& Nevents_run) {return 0;}
   /// Get the data for the particular event
-  virtual void GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {};
+  virtual void GetEvent(long int id,
+                        int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                        int* time
+                        ) {};
 
   bool HasTracker() const {return _has_tracker;}
   virtual void GetTrackerEvent(long int id, Float_t pos[8]) {}
+  virtual int* GetTime() {return nullptr;}
 
 protected:
   /// verbosity level
@@ -63,7 +67,12 @@ public:
   ~InterfaceAQS() override = default;
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
-  void GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) override;
+  void GetEvent(long int id,
+                int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                int* time
+                ) override;
+
+  int* GetTime() override {return _time;}
 
 private:
   Features _fea;
@@ -73,6 +82,8 @@ private:
   Param _param;
   DAQ _daq;
   Mapping _t2k;
+
+  int _time[3] {0, 0, 0};
 
   int _firstEv;
   int _padAmpl[geom::nPadx][geom::nPady][n::samples];
@@ -85,7 +96,10 @@ public:
   ~InterfaceROOT() override = default;
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
-  void GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) override;
+  void GetEvent(long int id,
+                int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                int* time
+                ) override;
   void GetTrackerEvent(long int id, Float_t* pos) override;
 
 private:
@@ -94,6 +108,9 @@ private:
   int _padAmpl[geom::nPadx][geom::nPady][n::samples];
   int _padAmpl_511[geom::nPadx][geom::nPady][511];
   bool _use511;
+  int _time_mid;
+  int _time_msb;
+  int _time_lsb;
 
   Float_t _pos[8];
 };

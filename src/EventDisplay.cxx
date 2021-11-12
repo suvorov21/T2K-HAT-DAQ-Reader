@@ -231,8 +231,9 @@ void EventDisplay::DoDraw() {
 
   // read event
   // WARNING due to some bug events MAY BE skipped qt the first read
-  _interface->GetEvent(eventID, _padAmpl);
-  _interface->GetEvent(eventID, _padAmpl);
+  int time[3];
+  _interface->GetEvent(eventID, _padAmpl, time);
+  _interface->GetEvent(eventID, _padAmpl, time);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents;
   std::cout << " in the file (" << _Nevents_run << " in run in total)" << std::flush;

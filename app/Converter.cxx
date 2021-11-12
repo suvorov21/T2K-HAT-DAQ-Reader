@@ -96,8 +96,13 @@ int main(int argc, char **argv) {
    }
    TTree tree_out("tree", "");
    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
+   int time_mid, time_msb, time_lsb;
    float TrackerPos[8];
    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
+   tree_out.Branch("time_mid",    &time_mid);
+   tree_out.Branch("time_msb",    &time_msb);
+   tree_out.Branch("time_lsb",    &time_lsb);
+
    if (read_tracker)
     tree_out.Branch("Tracker", &TrackerPos, Form("TrackerPos[8]/F"));
 
@@ -120,23 +125,29 @@ int main(int argc, char **argv) {
 
   std::vector<float> tracker_data;
   for (long int i = 0; i < Nevents; ++i) {
-   if (param.verbose)
-     std::cout << "Working on " << i << std::endl;
-   else if (Nevents/20 > 0) {
-     if (i % (Nevents / 20) == 0)
-       std::cout << "#" << std::flush;
-   }
-   interface->GetEvent(i, PadAmpl);
-   tracker_data.clear();
-   for (float & data : TrackerPos)
-     data = -999.;
-     if (tracker->GetEvent(i, tracker_data)) {
-       for (auto it = 0;  it < tracker_data.size(); ++it)
-         if (tracker_data[it] > 0)
-           TrackerPos[it] = tracker_data[it];
-     }
-     tree_out.Fill();
-  }
+    if (param.verbose)
+      std::cout << "Working on " << i << std::endl;
+    else if (Nevents/20 > 0) {
+      if (i % (Nevents / 20) == 0)
+      std::cout << "#" << std::flush;
+    }
+
+    int time[3];
+    interface->GetEvent(i, PadAmpl, time);
+    time_mid = time[0];
+    time_msb = time[1];
+    time_lsb = time[2];
+
+    tracker_data.clear();
+    for (float & data : TrackerPos)
+      data = -999.;
+    if (tracker->GetEvent(i, tracker_data)) {
+      for (auto it = 0;  it < tracker_data.size(); ++it)
+        if (tracker_data[it] > 0)
+          TrackerPos[it] = tracker_data[it];
+    }
+    tree_out.Fill();
+  } // loop over events
 
   tree_out.Write("", TObject::kOverwrite);
   file_out.Write();

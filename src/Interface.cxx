@@ -75,6 +75,12 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
             else if (evnum != prevEvnum) {
               if (_fea.TotalFileByteRead - 6*sizeof(unsigned short) != _eventPos[_eventPos.size()-1].first) {
                 _eventPos.emplace_back(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum);
+                if (_verbose > 0) {
+                  std::cout << "Event " << evnum << " at " << _fea.TotalFileByteRead - 6 * sizeof(unsigned short)
+                            << std::endl;
+                  std::cout << "time lsb:msb:mid : " << _dc.EventTimeStampLsb << " " << _dc.EventTimeStampMsb << " "
+                            << _dc.EventTimeStampMid << std::endl;
+                }
                 prevEvnum = evnum;
                 lastRead = _fea.TotalFileByteRead - 6*sizeof(unsigned short);
               }
@@ -121,7 +127,9 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceAQS::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
+void InterfaceAQS::GetEvent(long int id,
+                            int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                            int* time) {
 //******************************************************************************
   unsigned short datum;
   int err;
@@ -156,6 +164,10 @@ void InterfaceAQS::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n
         if (_dc.ItemType == IT_START_OF_EVENT) {
           if (_verbose > 0)
             std::cout << "Found event with id " << (int)_dc.EventNumber << std::endl;
+          time[0] = _dc.EventTimeStampMid;
+          time[1] = _dc.EventTimeStampMsb;
+          time[2] = _dc.EventTimeStampLsb;
+
           if ((int)_dc.EventNumber == _eventPos[id].second)
             eventNumber = (int)_dc.EventNumber;
         } else if (eventNumber == _eventPos[id].second && _dc.ItemType == IT_ADC_SAMPLE) {
@@ -176,27 +188,11 @@ void InterfaceAQS::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n
             }
           }
         }
-        else if (_dc.ItemType == IT_DATA_FRAME) {}
-        else if (_dc.ItemType == IT_END_OF_FRAME) {}
-        else if (_dc.ItemType == IT_MONITORING_FRAME) {}
-        else if (_dc.ItemType == IT_CONFIGURATION_FRAME) {}
-        else if (_dc.ItemType == IT_SHORT_MESSAGE) {}
-        else if (_dc.ItemType == IT_LONG_MESSAGE) {}
-        else if (eventNumber == id && _dc.ItemType == IT_TIME_BIN_INDEX) {}
-        else if (eventNumber == id && _dc.ItemType == IT_CHANNEL_HIT_HEADER) {}
-        else if (_dc.ItemType == IT_DATA_FRAME) {}
-        else if (_dc.ItemType == IT_NULL_DATUM) {}
-        else if (_dc.ItemType == IT_CHANNEL_HIT_COUNT) {}
-        else if (_dc.ItemType == IT_LAST_CELL_READ) {}
         else if (_dc.ItemType == IT_END_OF_EVENT) {
           // go to the next event
           done = false;
         }
-        else if (_dc.ItemType == IT_PED_HISTO_MD) {}
-        else if (_dc.ItemType == IT_UNKNOWN) {}
-        else if (_dc.ItemType == IT_CHAN_PED_CORRECTION) {}
-        else if (_dc.ItemType == IT_CHAN_ZERO_SUPPRESS_THRESHOLD) {}
-        else {}
+
       } // end of if (_dc.isItemComplete)
     } // end of second loop inside while
   } // end of while(done) loop
@@ -246,9 +242,15 @@ long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceROOT::GetEvent(long int id, int padAmpl[geom::nPadx][geom::nPady][n::samples]) {
+void InterfaceROOT::GetEvent(long int id,
+                             int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                             int* time
+                             ) {
 //******************************************************************************
   _tree_in->GetEntry(id);
+  time[0] = _time_mid;
+  time[1] = _time_msb;
+  time[2] = _time_lsb;
   for (int i = 0; i < geom::nPadx; ++i)
          for (int j = 0; j < geom::nPady; ++j)
             for (int t = 0; t < n::samples; ++t)
