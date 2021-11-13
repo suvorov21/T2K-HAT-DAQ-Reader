@@ -52,7 +52,6 @@ public:
 
   bool HasTracker() const {return _has_tracker;}
   virtual void GetTrackerEvent(long int id, Float_t pos[8]) {}
-  virtual int* GetTime() {return nullptr;}
 
 protected:
   /// verbosity level
@@ -82,8 +81,6 @@ private:
   Param _param;
   DAQ _daq;
   Mapping _t2k;
-
-  int _time[3] {0, 0, 0};
 
   int _firstEv;
   int _padAmpl[geom::nPadx][geom::nPady][n::samples];
