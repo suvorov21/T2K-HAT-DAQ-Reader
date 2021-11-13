@@ -71,8 +71,6 @@ public:
                 int* time
                 ) override;
 
-  int* GetTime() override {return _time;}
-
 private:
   Features _fea;
   std::vector<std::pair<long int, int> > _eventPos;
