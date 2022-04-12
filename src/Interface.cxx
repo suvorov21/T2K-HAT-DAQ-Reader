@@ -127,9 +127,7 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceAQS::GetEvent(long int id,
-                            int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
-                            int* time) {
+TRawEvent* InterfaceAQS::GetEvent(long int id) {
 //******************************************************************************
   unsigned short datum;
   int err;
@@ -140,7 +138,8 @@ void InterfaceAQS::GetEvent(long int id,
   fseek(_param.fsrc, _eventPos[id].first, SEEK_SET);
 
   // clean the padAmpl
-  memset(_padAmpl, 0, geom::nPadx * geom::nPady * n::samples * (sizeof(Int_t)));
+  auto event = new TRawEvent(id);
+  std::vector<TRawHit*> hitVector{};
   int eventNumber = -1;
 
   while (done) {
@@ -164,9 +163,9 @@ void InterfaceAQS::GetEvent(long int id,
         if (_dc.ItemType == IT_START_OF_EVENT) {
           if (_verbose > 0)
             std::cout << "Found event with id " << (int)_dc.EventNumber << std::endl;
-          time[0] = _dc.EventTimeStampMid;
-          time[1] = _dc.EventTimeStampMsb;
-          time[2] = _dc.EventTimeStampLsb;
+          event->SetTime(_dc.EventTimeStampMid,
+                         _dc.EventTimeStampMsb,
+                         _dc.EventTimeStampLsb);
 
           if ((int)_dc.EventNumber == _eventPos[id].second)
             eventNumber = (int)_dc.EventNumber;
@@ -174,17 +173,30 @@ void InterfaceAQS::GetEvent(long int id,
           // std::cout << "ADC datum" << std::endl;
           if (_dc.ChannelIndex != 15 && _dc.ChannelIndex != 28 && _dc.ChannelIndex != 53 && _dc.ChannelIndex != 66 && _dc.ChannelIndex > 2 && _dc.ChannelIndex < 79) {
             // histo and display
-            int x = _t2k.i(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
-            int y = _t2k.j(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
+//            int x = _t2k.i(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
+//            int y = _t2k.j(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
+            auto hitCandidate = new TRawHit(_dc.CardIndex,
+                                            _dc.ChipIndex,
+                                            _dc.ChannelIndex);
+            auto hitIt = std::find_if(hitVector.begin(),
+                                   hitVector.end(),
+                                   [hitCandidate](const TRawHit* ptr){return *hitCandidate == *ptr;});
+
 
             int a = (int)_dc.AbsoluteSampleIndex;
             int b = (int)_dc.AdcSample;
 
-            // safety check
-            if ( x >= 0 && y >= 0) {
-              _padAmpl[_dc.CardIndex][x][y][a] = b;
+            if (a > 510) {
+              continue;
+            }
+
+            if (hitIt != hitVector.end()) {
+              (*hitIt)->SetADCunit(a, b);
+              delete hitCandidate;
             } else {
-              std::cout << "card\t" << _dc.CardIndex << "\tChip\t" << _dc.ChipIndex << "\tch\t" << _dc.ChannelIndex << std::endl;
+              hitCandidate->ResetWF();
+              hitCandidate->SetADCunit(a, b);
+              hitVector.emplace_back(hitCandidate);
             }
           }
         }
@@ -197,11 +209,12 @@ void InterfaceAQS::GetEvent(long int id,
     } // end of second loop inside while
   } // end of while(done) loop
 
-  for (int card = 0; card < geom::nModules; ++card)
-    for (int x = 0; x < geom::nPadx; ++x)
-       for (int j = 0; j < geom::nPady; ++j)
-          for (int t = 0; t < n::samples; ++t)
-             padAmpl[card][x][j][t] = _padAmpl[card][x][j][t];
+  event->Reserve(hitVector.size());
+  for (auto& hit : hitVector) {
+    hit->ShrinkWF();
+    event->AddHit(hit);
+  }
+  return event;
 }
 
 //******************************************************************************
@@ -243,25 +256,22 @@ long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 }
 
 //******************************************************************************
-void InterfaceROOT::GetEvent(long int id,
-                             int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
-                             int* time
-                             ) {
+TRawEvent* InterfaceROOT::GetEvent(long int id) {
 //******************************************************************************
-  _tree_in->GetEntry(id);
-  time[0] = _time_mid;
-  time[1] = _time_msb;
-  time[2] = _time_lsb;
-  for (int card = 0; card < geom::nModules; ++card)
-    for (int i = 0; i < geom::nPadx; ++i)
-           for (int j = 0; j < geom::nPady; ++j)
-              for (int t = 0; t < n::samples; ++t)
-                if (_use511)
-                  padAmpl[card][i][j][t] = _padAmpl_511[card][i][j][t];
-                else
-                  padAmpl[card][i][j][t] = _padAmpl[card][i][j][t];
-
-
+//  _tree_in->GetEntry(id);
+//  time[0] = _time_mid;
+//  time[1] = _time_msb;
+//  time[2] = _time_lsb;
+//  for (int card = 0; card < geom::nModules; ++card)
+//    for (int i = 0; i < geom::nPadx; ++i)
+//           for (int j = 0; j < geom::nPady; ++j)
+//              for (int t = 0; t < n::samples; ++t)
+//                if (_use511)
+//                  padAmpl[i][j][t] = _padAmpl_511[i][j][t];
+//                else
+//                  padAmpl[i][j][t] = _padAmpl[i][j][t];
+//
+  return nullptr;
 }
 
 void InterfaceROOT::GetTrackerEvent(long int id, Float_t* pos) {

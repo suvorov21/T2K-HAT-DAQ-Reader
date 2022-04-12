@@ -7,8 +7,6 @@
 ######################
 
 configure_file( T2KConstants.h.in ${CMAKE_CURRENT_SOURCE_DIR}/T2KConstants.h )
-pbuilder_install_headers( ${CMAKE_CURRENT_SOURCE_DIR}/T2KConstants.h )
-
 
 set (CORE_DICT_HEADERFILES
     DAQ.h
@@ -20,13 +18,6 @@ set (CORE_DICT_HEADERFILES
     platform_spec.h
     Interface.hxx
     SetT2KStyle.hxx
-)
-
-set( CORE_HEADERFILES
-    ${CORE_DICT_HEADERFILES}
-)
-
-set (CORE_DEP_LIBRARIES
 )
 
 set (CORE_SOURCEFILES
@@ -45,18 +36,11 @@ set( CORE_SOURCEFILES ${CORE_SOURCEFILES} ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict.
 set( CORE_DICT_PCMFILE ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict_rdict.pcm )
 
 ##################################################
-
+set( EVENT_SOURCEFILES ${EVENT_SOURCEFILES} ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict.cxx )
 ROOT_GENERATE_DICTIONARY( CCoreDict ${CORE_DICT_HEADERFILES} LINKDEF ${CORE_LINKDEF_HEADERFILE}  OPTIONS -inlineInputHeader )
-pbuilder_install_files( ${LIB_INSTALL_DIR} ${CORE_DICT_PCMFILE} )
 
-# ###########
-# # Library #
-# ###########
-
-pbuilder_library( CCore CORE_SOURCEFILES CORE_DEP_LIBRARIES )
-pbuilder_install_headers (${CORE_HEADERFILES})
-
-# configure_file( T2KConstants.h.in ${CMAKE_CURRENT_BINARY_DIR}/T2KConstants.h )
 configure_file( T2KConstants.h.in ${CMAKE_CURRENT_BINARY_DIR}/T2KConstants.h @ONLY )
-pbuilder_install_headers( ${CMAKE_CURRENT_BINARY_DIR}/T2KConstants.h )
+
+add_library(TCore ${CORE_SOURCEFILES} ${EVENT_SOURCEFILES})
+target_link_libraries(TCore TRawEvent)
 

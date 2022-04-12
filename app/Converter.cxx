@@ -95,18 +95,17 @@ int main(int argc, char **argv) {
       exit(1);
    }
    TTree tree_out("tree", "");
-   int PadAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
+//    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
+//    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl_[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
+
+    auto event = new TRawEvent();
+    tree_out.Branch("TRawEvent", &event, 32000, 0);
+
    int time_mid, time_msb, time_lsb;
    float TrackerPos[8];
-   for (auto i = 0; i < 16; ++i)
-       tree_out.Branch(Form("PadAmpl_%i", i), &PadAmpl[i], Form("PadAmpl_%i[%i][%i][%i]/I", i, geom::nPadx, geom::nPady, n::samples));
-
-   tree_out.Branch("time_mid",    &time_mid);
-   tree_out.Branch("time_msb",    &time_msb);
-   tree_out.Branch("time_lsb",    &time_lsb);
 
    if (read_tracker)
-    tree_out.Branch("Tracker", &TrackerPos, Form("TrackerPos[8]/F"));
+       tree_out.Branch("Tracker", &TrackerPos, Form("TrackerPos[8]/F"));
 
    // define the output events number
    long int Nevents;
@@ -133,12 +132,12 @@ int main(int argc, char **argv) {
       if (i % (Nevents / 20) == 0)
       std::cout << "#" << std::flush;
     }
-
-    int time[3];
-    interface->GetEvent(i, PadAmpl, time);
-    time_mid = time[0];
-    time_msb = time[1];
-    time_lsb = time[2];
+    event = interface->GetEvent(i);
+//    int time[3];
+//    interface->GetEvent(i, PadAmpl, time);
+//    time_mid = time[0];
+//    time_msb = time[1];
+//    time_lsb = time[2];
 
     tracker_data.clear();
     for (float & data : TrackerPos)
@@ -149,6 +148,7 @@ int main(int argc, char **argv) {
           TrackerPos[it] = tracker_data[it];
     }
     tree_out.Fill();
+    delete event;
   } // loop over events
 
   tree_out.Write("", TObject::kOverwrite);

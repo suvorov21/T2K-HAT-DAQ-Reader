@@ -12,6 +12,7 @@
 #include "T2KConstants.h"
 #include "Mapping.h"
 #include "DAQ.h"
+#include "TRawEvent.hxx"
 
 static int tmp = -1;
 
@@ -43,15 +44,12 @@ public:
   //! \param refresh whether to redo the scan from scratch
   //! \param Nevents_run update the number of events in the whole run
   //! \return
-  virtual long int Scan(int start, bool refresh, int& Nevents_run) {return 0;}
+  virtual long int Scan(int start, bool refresh, int& Nevents_run) = 0;
   /// Get the data for the particular event
-  virtual void GetEvent(long int id,
-                        int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
-                        int* time
-                        ) {};
+  virtual TRawEvent* GetEvent(long int id) = 0;
 
   bool HasTracker() const {return _has_tracker;}
-  virtual void GetTrackerEvent(long int id, Float_t pos[8]) {}
+  virtual void GetTrackerEvent(long int id, Float_t pos[8]) = 0;
 
 protected:
   /// verbosity level
@@ -62,14 +60,14 @@ protected:
 /// AQS file reader
 class InterfaceAQS: public InterfaceBase {
 public:
-  InterfaceAQS() {};
+  explicit InterfaceAQS() = default;;
   ~InterfaceAQS() override = default;
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
-  void GetEvent(long int id,
-                int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
-                int* time
-                ) override;
+  TRawEvent* GetEvent(long int id) override;
+  void GetTrackerEvent(long int id, Float_t pos[8]) override {
+    throw std::logic_error("No tracker info in AQS");
+  }
 
 private:
   Features _fea;
@@ -81,7 +79,6 @@ private:
   Mapping _t2k;
 
   int _firstEv;
-  int _padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
 };
 
 /// ROOT file reader
@@ -91,17 +88,14 @@ public:
   ~InterfaceROOT() override = default;
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
-  void GetEvent(long int id,
-                int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
-                int* time
-                ) override;
+  TRawEvent* GetEvent(long int id) override;
   void GetTrackerEvent(long int id, Float_t* pos) override;
 
 private:
   TFile *_file_in;
   TTree *_tree_in;
-  int _padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
-  int _padAmpl_511[geom::nModules][geom::nPadx][geom::nPady][511];
+  int _padAmpl[geom::nPadx][geom::nPady][n::samples];
+  int _padAmpl_511[geom::nPadx][geom::nPady][511];
   bool _use511;
   int _time_mid;
   int _time_msb;
@@ -113,12 +107,19 @@ private:
 /// Silicon tracker file reader
 class InterfaceTracker: public InterfaceBase {
 public:
-    InterfaceTracker() {}
+    InterfaceTracker() = default;
     ~InterfaceTracker() override;
 
     bool Initialise(TString& file_name, int verbose) override;
     long int Scan(int start, bool refresh, int& Nevents_run) override;
     bool GetEvent(long int id, std::vector<float>& data);
+    TRawEvent* GetEvent(long int id) override {
+      throw std::logic_error("not implemented");
+    }
+
+    void GetTrackerEvent(long int id, Float_t pos[8]) override {
+      throw std::logic_error("not implemented");
+    }
 
     void GotoEvent(unsigned int num);
     bool HasEvent(long int id);
