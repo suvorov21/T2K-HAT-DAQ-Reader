@@ -19,7 +19,7 @@ set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
 list (APPEND Root_COMPONENTS RIO Net Hist Graf Graf3d Gpad Gui Tree Rint Postscript Matrix Physics MathCore Thread)
 find_package (ROOT 6.00 REQUIRED COMPONENTS ${Root_COMPONENTS})
 if (ROOT_FOUND)
-    
+
 else (ROOT_FOUND)
     message(FATAL "Unable to find ROOT")
 endif (ROOT_FOUND)
