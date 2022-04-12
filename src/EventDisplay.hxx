@@ -61,7 +61,7 @@ private:
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
     /// data representation
-    Int_t _padAmpl[geom::nPadx][geom::nPady][n::samples];
+    Int_t _padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
 
     // GUI
     TCanvas *f_ED_canvas;

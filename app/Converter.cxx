@@ -95,10 +95,10 @@ int main(int argc, char **argv) {
       exit(1);
    }
    TTree tree_out("tree", "");
-   int PadAmpl[geom::nPadx][geom::nPady][n::samples];
+   int PadAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
    int time_mid, time_msb, time_lsb;
    float TrackerPos[8];
-   tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
+   tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl[%i][%i][%i][%i]/I", geom::nModules, geom::nPadx, geom::nPady, n::samples));
    tree_out.Branch("time_mid",    &time_mid);
    tree_out.Branch("time_msb",    &time_msb);
    tree_out.Branch("time_lsb",    &time_lsb);

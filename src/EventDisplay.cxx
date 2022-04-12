@@ -244,7 +244,7 @@ void EventDisplay::DoDraw() {
       auto maxt = -1;
       for (auto t = 0; t < n::samples; ++t) {
         int Q = 0;
-        Q = _padAmpl[x][y][t] - 250;
+        Q = _padAmpl[0][x][y][t] - 250;
 
         if (Q > max) {
           max = Q;
@@ -398,7 +398,7 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
       if (x+1 > 35 || x-1 < 0 || y+1 > 31 || y-1 < 0)
         continue;
       int WF_signal = 0;
-      WF_signal = _padAmpl[x-1+i%3][y+1-i/3][t_id] - 250;
+      WF_signal = _padAmpl[0][x-1+i%3][y+1-i/3][t_id] - 250;
       if (WF_signal > -250)
         WF[i]->SetBinContent(t_id, WF_signal);
       else
@@ -443,7 +443,7 @@ void EventDisplay::DrawWF() {
       if (_x_clicked+1 > 35 || _x_clicked-1 < 0 || _y_clicked+1 > 31 || _y_clicked-1 < 0)
         return;
       int WF_signal = 0;
-      WF_signal = _padAmpl[_x_clicked-1+i%3][_y_clicked+1-i/3][t_id] - 250;
+      WF_signal = _padAmpl[0][_x_clicked-1+i%3][_y_clicked+1-i/3][t_id] - 250;
       if (WF_signal > -250)
         WF[i]->SetBinContent(t_id, WF_signal);
       else
