@@ -46,7 +46,7 @@ public:
   virtual long int Scan(int start, bool refresh, int& Nevents_run) {return 0;}
   /// Get the data for the particular event
   virtual void GetEvent(long int id,
-                        int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                        int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
                         int* time
                         ) {};
 
@@ -67,7 +67,7 @@ public:
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
   void GetEvent(long int id,
-                int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
                 int* time
                 ) override;
 
@@ -81,7 +81,7 @@ private:
   Mapping _t2k;
 
   int _firstEv;
-  int _padAmpl[geom::nPadx][geom::nPady][n::samples];
+  int _padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
 };
 
 /// ROOT file reader
@@ -92,7 +92,7 @@ public:
   bool Initialise(TString& file_name, int verbose) override;
   long int Scan(int start, bool refresh, int& Nevents_run) override;
   void GetEvent(long int id,
-                int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
                 int* time
                 ) override;
   void GetTrackerEvent(long int id, Float_t* pos) override;
@@ -100,8 +100,8 @@ public:
 private:
   TFile *_file_in;
   TTree *_tree_in;
-  int _padAmpl[geom::nPadx][geom::nPady][n::samples];
-  int _padAmpl_511[geom::nPadx][geom::nPady][511];
+  int _padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples];
+  int _padAmpl_511[geom::nModules][geom::nPadx][geom::nPady][511];
   bool _use511;
   int _time_mid;
   int _time_msb;

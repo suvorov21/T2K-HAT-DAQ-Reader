@@ -128,7 +128,7 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 
 //******************************************************************************
 void InterfaceAQS::GetEvent(long int id,
-                            int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                            int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
                             int* time) {
 //******************************************************************************
   unsigned short datum;
@@ -147,9 +147,9 @@ void InterfaceAQS::GetEvent(long int id,
     if (fread(&datum, sizeof(unsigned short), 1, _param.fsrc) != 1) {
       done = false;
       if (ferror(_param.fsrc))
-        cout << "ERROR" << endl;
+        cout << "\nERROR" << endl;
       if (feof(_param.fsrc))
-        cout << "reach EOF" << endl;
+        cout << "\nreach EOF" << endl;
     } else {
 
       _fea.TotalFileByteRead += sizeof(unsigned short);
@@ -182,7 +182,7 @@ void InterfaceAQS::GetEvent(long int id,
 
             // safety check
             if ( x >= 0 && y >= 0) {
-              _padAmpl[x][y][a] = b;
+              _padAmpl[_dc.CardIndex][x][y][a] = b;
             } else {
               std::cout << "card\t" << _dc.CardIndex << "\tChip\t" << _dc.ChipIndex << "\tch\t" << _dc.ChannelIndex << std::endl;
             }
@@ -197,10 +197,11 @@ void InterfaceAQS::GetEvent(long int id,
     } // end of second loop inside while
   } // end of while(done) loop
 
-  for (int x = 0; x < geom::nPadx; ++x)
-     for (int j = 0; j < geom::nPady; ++j)
-        for (int t = 0; t < n::samples; ++t)
-           padAmpl[x][j][t] = _padAmpl[x][j][t];
+  for (int card = 0; card < geom::nModules; ++card)
+    for (int x = 0; x < geom::nPadx; ++x)
+       for (int j = 0; j < geom::nPady; ++j)
+          for (int t = 0; t < n::samples; ++t)
+             padAmpl[card][x][j][t] = _padAmpl[card][x][j][t];
 }
 
 //******************************************************************************
@@ -243,7 +244,7 @@ long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 
 //******************************************************************************
 void InterfaceROOT::GetEvent(long int id,
-                             int padAmpl[geom::nPadx][geom::nPady][n::samples],
+                             int padAmpl[geom::nModules][geom::nPadx][geom::nPady][n::samples],
                              int* time
                              ) {
 //******************************************************************************
@@ -251,13 +252,14 @@ void InterfaceROOT::GetEvent(long int id,
   time[0] = _time_mid;
   time[1] = _time_msb;
   time[2] = _time_lsb;
-  for (int i = 0; i < geom::nPadx; ++i)
-         for (int j = 0; j < geom::nPady; ++j)
-            for (int t = 0; t < n::samples; ++t)
-              if (_use511)
-                padAmpl[i][j][t] = _padAmpl_511[i][j][t];
-              else
-                padAmpl[i][j][t] = _padAmpl[i][j][t];
+  for (int card = 0; card < geom::nModules; ++card)
+    for (int i = 0; i < geom::nPadx; ++i)
+           for (int j = 0; j < geom::nPady; ++j)
+              for (int t = 0; t < n::samples; ++t)
+                if (_use511)
+                  padAmpl[card][i][j][t] = _padAmpl_511[card][i][j][t];
+                else
+                  padAmpl[card][i][j][t] = _padAmpl[card][i][j][t];
 
 
 }
