@@ -10,7 +10,6 @@ set(PROJECT_VERSION 1.0)
 
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
 
-
 # From https://blog.kitware.com/cmake-and-the-default-build-type/
 # Set a default build type to Release if none was specified
 # This has to be before Scarab PackageBuilder since the package builder defines the default mode to DEBUG...
@@ -52,10 +51,7 @@ endif (ROOT_FOUND)
 include_directories (${ROOT_INCLUDE_DIR})
 LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
 
-
 pbuilder_add_submodule(hat_event ${PROJECT_SOURCE_DIR}/external/hat_event)
-
-pbuilder_use_sm_library(hat_event hat_event)
 
 #########
 # sources
