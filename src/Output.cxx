@@ -6,6 +6,13 @@
 
 #include "Output.hxx"
 
+TString OutputBase::getFileName(std::string path, std::string file_in) {
+    while (file_in.find('/') != string::npos)
+        file_in = file_in.substr(file_in.find('/') + 1);
+    file_in = file_in.substr(0, file_in.find('.'));
+    return path + file_in + ".root";
+}
+
 void OutputArray::Initialise(const TString& fileName, bool useTracker) {
     _file = new TFile(fileName, "NEW");
     if (!_file->IsOpen()) {

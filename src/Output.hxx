@@ -20,6 +20,8 @@ class OutputBase {
     virtual void AddTrackerEvent(const std::vector<float>& TrackerPos) = 0;
     virtual void Fill() = 0;
     virtual void Finilise() = 0;
+
+    static TString getFileName(std::string path, std::string name);
 };
 
 /// Store output as a 3-D array

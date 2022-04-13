@@ -64,23 +64,14 @@ int main(int argc, char **argv) {
    }
 
    // Whether to read silicon tracker stuff
-   bool read_tracker = false;
    auto tracker = std::make_shared<InterfaceTracker>();
-   if (strcmp(param.tracker_file, "") != 0) {
-     TString tracker_name = TString(param.tracker_file);
-     read_tracker = tracker->Initialise(tracker_name, param.verbose);
-     if (!read_tracker)
-       std::cerr << "Tracker file is specified, but could not be opened" << std::endl;
-   }
+   TString tracker_name = TString(param.tracker_file);
+   auto read_tracker = tracker->Initialise(tracker_name, param.verbose);
 
    // extract the file name from the input
-   std::string file_in = param.inp_file;
-   while (file_in.find('/') != string::npos)
-      file_in = file_in.substr(file_in.find('/') + 1);
-   file_in = file_in.substr(0, file_in.find('.'));
+   TString out_file = OutputBase::getFileName(param.out_path, param.inp_file);
 
-   TString out_file = param.out_path + file_in + ".root";
-
+   // Select the output format
    std::shared_ptr<OutputBase> output = std::make_shared<OutputTRawEvent>();
    output->Initialise(out_file, read_tracker);
 

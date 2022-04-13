@@ -330,12 +330,16 @@ TRawEvent* InterfaceRawEvent::GetEvent(long int id) {
 }
 
 //******************************************************************************
-bool InterfaceTracker::Initialise(TString &file_name, int verbose) {
+bool InterfaceTracker::Initialise(TString& file_name, int verbose) {
 //******************************************************************************
+  if (file_name == "")
+    return false;
   _file.open(file_name);
   _verbose = verbose;
-  if (!_file.is_open())
+  if (!_file.is_open()) {
+    std::cerr << "Tracker file is specified, but could not be opened" << std::endl;
     return false;
+  }
   return true;
 }
 
