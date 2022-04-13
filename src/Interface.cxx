@@ -184,10 +184,6 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
             int a = (int)_dc.AbsoluteSampleIndex;
             int b = (int)_dc.AdcSample;
 
-            if (a > 510) {
-              continue;
-            }
-
             if (hitIt != hitVector.end()) {
               (*hitIt)->SetADCunit(a, b);
               delete hitCandidate;

@@ -404,15 +404,12 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
     if (abs(x_i - _x_clicked) > 1 || abs(y_i - _y_clicked) > 1)
       continue;
 
-    std::cout << "Pad : " << x_i << "\t" << y_i << std::endl;
-    std::cout << "Selected : " << _x_clicked << "\t" << _y_clicked << std::endl;
-
     int i = (x_i - _x_clicked + 1) % 3 + (- y_i + _y_clicked + 1) * 3;
-    std::cout << "i " << i << std::endl;
     if (i >= 0 && i < 9) {
       WF[i]->Reset();
       for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
-        WF[i]->SetBinContent(hit->GetTime() + t, hit->GetADCvector()[t]-250);
+        auto ampl = hit->GetADCvector()[t]-250;
+        WF[i]->SetBinContent(hit->GetTime() + t,  ampl > -249 ? ampl : 0);
       }
       f_WF_canvas->cd(i+1);
       WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
@@ -459,7 +456,8 @@ void EventDisplay::DrawWF() {
     if (i >= 0 && i < 9) {
       WF[i]->Reset();
       for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
-        WF[i]->SetBinContent(hit->GetTime() + t, hit->GetADCvector()[t]-250);
+        auto ampl = hit->GetADCvector()[t]-250;
+        WF[i]->SetBinContent(hit->GetTime() + t, ampl > -249 ? ampl : 0);
       }
       f_WF_canvas->cd(i + 1);
       WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
