@@ -173,9 +173,6 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
         } else if (eventNumber == _eventPos[id].second && _dc.ItemType == IT_ADC_SAMPLE) {
           // std::cout << "ADC datum" << std::endl;
           if (_dc.ChannelIndex != 15 && _dc.ChannelIndex != 28 && _dc.ChannelIndex != 53 && _dc.ChannelIndex != 66 && _dc.ChannelIndex > 2 && _dc.ChannelIndex < 79) {
-            // histo and display
-//            int x = _t2k.i(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
-//            int y = _t2k.j(_dc.ChipIndex / n::chips, _dc.ChipIndex % n::chips, _daq.connector(_dc.ChannelIndex));
             auto hitCandidate = new TRawHit(_dc.CardIndex,
                                             _dc.ChipIndex,
                                             _dc.ChannelIndex);

@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
    TString out_file = OutputBase::getFileName(param.out_path, param.inp_file);
 
    // Select the output format
+   // TODO add CLI for this choice
    std::shared_ptr<OutputBase> output = std::make_shared<OutputTRawEvent>();
    output->Initialise(out_file, read_tracker);
 
