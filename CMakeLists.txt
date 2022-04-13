@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.1)
 # setup #
 # ##############################################################################
 
-set(PROJECT_NAME DAQ_reader)
+set(PROJECT_NAME daq_reader)
 set(PROJECT_VERSION 1.0)
 
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
@@ -25,7 +25,8 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif ()
 
 list(APPEND CMAKE_MODULE_PATH
-        ${PROJECT_SOURCE_DIR}/cmake)
+        ${PROJECT_SOURCE_DIR}/cmake
+        ${PROJECT_SOURCE_DIR}/external/hat_event/cmake)
 include(PackageBuilder)
 
 MESSAGE(STATUS ${CMAKE_MODULE_PATH})
@@ -33,7 +34,7 @@ MESSAGE(STATUS ${CMAKE_MODULE_PATH})
 
 pbuilder_prepare_project()
 
-set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
+set(CMAKE_CXX_STANDARD 17) # Enable c++14 standard
 
 ######
 # ROOT
@@ -54,6 +55,8 @@ LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
 
 pbuilder_add_submodule(hat_event ${PROJECT_SOURCE_DIR}/external/hat_event)
 
+pbuilder_use_sm_library(hat_event hat_event)
+
 #########
 # sources
 #########
@@ -66,9 +69,11 @@ include_directories (
     ${PROJECT_SOURCE_DIR}/external/hat_event/src/
 )
 
-# add_subdirectory (external/hat_event/)
 add_subdirectory (src)
 add_subdirectory (app)
+
+configure_file(${PROJECT_SOURCE_DIR}/daq_readerConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/daq_readerConfig.cmake @ONLY)
+pbuilder_do_package_config()
 
 configure_file(this_daq.sh.in this_daq.sh)
 pbuilder_install_files(${BIN_INSTALL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/this_daq.sh)

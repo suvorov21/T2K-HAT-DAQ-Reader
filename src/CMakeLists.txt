@@ -31,7 +31,7 @@ set (CORE_SOURCEFILES
 )
 
 # If there were other libraries in this package on which this library depends, then they would be put in this variable
-set(PACKAGE_LIBS TRawEvent)
+set(PACKAGE_LIBS TRawEvent_daq_reader)
 
 set( CORE_LINKDEF_HEADERFILE LinkDef/CCoreLinkDef.h )
 set( CORE_SOURCEFILES ${CORE_SOURCEFILES} ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict.cxx )
@@ -48,6 +48,10 @@ pbuilder_install_files(${LIB_INSTALL_DIR} ${CORE_DICT_PCMFILE})
 # ###########
 # # Library #
 # ###########
+message("here")
+message("${PUBLIC_EXT_LIBS}")
+message("${PRIVATE_EXT_LIBS}")
+message("${PACKAGE_LIBS}")
 
 pbuilder_library(
         TARGET TCore
