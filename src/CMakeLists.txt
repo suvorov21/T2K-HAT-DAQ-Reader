@@ -30,6 +30,8 @@ set (CORE_SOURCEFILES
     Interface.cxx
 )
 
+# If there were other libraries in this package on which this library depends, then they would be put in this variable
+set(PACKAGE_LIBS TRawEvent)
 
 set( CORE_LINKDEF_HEADERFILE LinkDef/CCoreLinkDef.h )
 set( CORE_SOURCEFILES ${CORE_SOURCEFILES} ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict.cxx )
@@ -41,6 +43,23 @@ ROOT_GENERATE_DICTIONARY( CCoreDict ${CORE_DICT_HEADERFILES} LINKDEF ${CORE_LINK
 
 configure_file( T2KConstants.h.in ${CMAKE_CURRENT_BINARY_DIR}/T2KConstants.h @ONLY )
 
-add_library(TCore ${CORE_SOURCEFILES} ${EVENT_SOURCEFILES})
-target_link_libraries(TCore TRawEvent)
+pbuilder_install_files(${LIB_INSTALL_DIR} ${CORE_DICT_PCMFILE})
+
+# ###########
+# # Library #
+# ###########
+
+pbuilder_library(
+        TARGET TCore
+        SOURCES ${CORE_SOURCEFILES}
+        PROJECT_LIBRARIES ${PACKAGE_LIBS}
+        PUBLIC_EXTERNAL_LIBRARIES ${PUBLIC_EXT_LIBS}
+        PRIVATE_EXTERNAL_LIBRARIES ${PRIVATE_EXT_LIBS}
+)
+pbuilder_component_install_and_export(
+        COMPONENT Library
+        LIBTARGETS TCore
+)
+
+pbuilder_install_headers(${CORE_DICT_HEADERFILES})
 

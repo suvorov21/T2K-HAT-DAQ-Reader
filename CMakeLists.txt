@@ -10,6 +10,29 @@ set(PROJECT_VERSION 1.0)
 
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
 
+
+# From https://blog.kitware.com/cmake-and-the-default-build-type/
+# Set a default build type to Release if none was specified
+# This has to be before Scarab PackageBuilder since the package builder defines the default mode to DEBUG...
+set(default_build_type "Release")
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+            STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+            "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
+
+list(APPEND CMAKE_MODULE_PATH
+        ${PROJECT_SOURCE_DIR}/cmake)
+include(PackageBuilder)
+
+MESSAGE(STATUS ${CMAKE_MODULE_PATH})
+
+
+pbuilder_prepare_project()
+
 set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
 
 ######
@@ -23,8 +46,13 @@ if (ROOT_FOUND)
 else (ROOT_FOUND)
     message(FATAL "Unable to find ROOT")
 endif (ROOT_FOUND)
-include(${ROOT_USE_FILE})
+
+# include(${ROOT_USE_FILE})
 include_directories (${ROOT_INCLUDE_DIR})
+LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
+
+
+pbuilder_add_submodule(hat_event ${PROJECT_SOURCE_DIR}/external/hat_event)
 
 #########
 # sources
@@ -38,6 +66,9 @@ include_directories (
     ${PROJECT_SOURCE_DIR}/external/hat_event/src/
 )
 
-add_subdirectory (external/hat_event/)
+# add_subdirectory (external/hat_event/)
 add_subdirectory (src)
 add_subdirectory (app)
+
+configure_file(this_daq.sh.in this_daq.sh)
+pbuilder_install_files(${BIN_INSTALL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/this_daq.sh)

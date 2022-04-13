@@ -5,3 +5,5 @@ T2KConstants.h
 *.d
 *.so
 *.pcm
+cmake-build-debug
+.idea
