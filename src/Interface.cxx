@@ -157,6 +157,7 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
         printf("%d Datum_Decode: %s\n", err, &_dc.ErrorString[0]);
         done = true;
       }
+
       // Decode
       if (_dc.isItemComplete) {
 
@@ -226,6 +227,8 @@ bool InterfaceROOT::Initialise(TString& file_name, int verbose) {
   _tree_in = (TTree*)_file_in->Get("tree");
   _use511 = false;
 
+  _t2k.loadMapping();
+
   TString branch_name = _tree_in->GetBranch("PadAmpl")->GetTitle();
 
   if (branch_name.Contains("[510]")) {
@@ -258,20 +261,34 @@ long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
 TRawEvent* InterfaceROOT::GetEvent(long int id) {
 //******************************************************************************
-//  _tree_in->GetEntry(id);
-//  time[0] = _time_mid;
-//  time[1] = _time_msb;
-//  time[2] = _time_lsb;
-//  for (int card = 0; card < geom::nModules; ++card)
-//    for (int i = 0; i < geom::nPadx; ++i)
-//           for (int j = 0; j < geom::nPady; ++j)
-//              for (int t = 0; t < n::samples; ++t)
-//                if (_use511)
-//                  padAmpl[i][j][t] = _padAmpl_511[i][j][t];
-//                else
-//                  padAmpl[i][j][t] = _padAmpl[i][j][t];
-//
-  return nullptr;
+  _tree_in->GetEntry(id);
+  auto event = new TRawEvent(id);
+  event->SetTime(_time_mid, _time_msb, _time_lsb);
+
+  for (int i = 0; i < geom::nPadx; ++i) {
+    for (int j = 0; j < geom::nPady; ++j) {
+      auto hit = new TRawHit();
+      hit->SetCard(0);
+      auto elec = _t2k.getElectronics(i, j);
+      hit->SetChip(elec.first);
+      hit->SetChannel(elec.second);
+      hit->ResetWF();
+      auto max = 0;
+      for (int t = 0; t < n::samples; ++t) {
+        auto ampl = _use511 ? _padAmpl_511[i][j][t] : _padAmpl[i][j][t];
+        hit->SetADCunit(t, ampl);
+        if (ampl > max)
+          max = ampl;
+      }
+      if (max > 0) {
+        hit->ShrinkWF();
+        event->AddHit(hit);
+      } else {
+        delete hit;
+      }
+    }
+  }
+  return event;
 }
 
 void InterfaceROOT::GetTrackerEvent(long int id, Float_t* pos) {
@@ -298,8 +315,6 @@ bool InterfaceTracker::Initialise(TString &file_name, int verbose) {
 //******************************************************************************
 long int InterfaceTracker::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
-//  return std::count(std::istreambuf_iterator<char>(_file),
-//                    std::istreambuf_iterator<char>(), '\n');
   std::string line_str;
   int line = -1;
   while(getline(_file, line_str)) {

@@ -121,7 +121,12 @@ void Mapping::loadMapping()
     }
     D.close();
 
-
+    ifstream R((loc::mapping + "reverseMap.txt").c_str());
+    int x, y, chip, channel;
+    while(!R.eof()) {
+        R >> x >> y >> chip >> channel;
+        rev_map[std::make_pair(x, y)] = std::make_pair(chip, channel);
+    }
 }
 
 
@@ -137,4 +142,8 @@ int Mapping::j(int card, int chip, int bin)
     int result;
     result=m_jchip[card][chip][bin] + (geom::chipOny-1-(chip%geom::chipOny))*geom::padOnchipy;
     return result;
+}
+
+std::pair<int, int> Mapping::getElectronics(int row, int column) {
+    return rev_map[std::make_pair(row, column)];
 }

@@ -102,7 +102,10 @@ private:
   int _time_lsb;
 
   Float_t _pos[8];
+  Mapping _t2k;
 };
+
+// TODO add interface for TRawEvent
 
 /// Silicon tracker file reader
 class InterfaceTracker: public InterfaceBase {

@@ -3,6 +3,10 @@
 
 #include "T2KConstants.h"
 
+#include <map>
+
+using ipair = std::pair<int, int>;
+
 class Mapping
 {
     public :
@@ -15,6 +19,7 @@ class Mapping
         int connector(int card, int chip, int ichip, int jchip){return m_connector[card][chip][ichip][jchip];}
         int i(int card, int chip, int bin);
         int j(int card, int chip, int bin);
+        std::pair<int, int> getElectronics(int row, int column);
 
         // Other
 
@@ -22,6 +27,7 @@ class Mapping
         int m_ichip[n::cards][n::chips][n::bins];
         int m_jchip[n::cards][n::chips][n::bins];
         int m_connector[n::cards][n::chips][geom::padOnchipx][geom::padOnchipy];
+        std::map<ipair, ipair> rev_map;
 };
 
 #endif
