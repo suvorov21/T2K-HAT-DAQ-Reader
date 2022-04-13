@@ -17,6 +17,7 @@ set (CORE_DICT_HEADERFILES
     EventDisplay.hxx
     platform_spec.h
     Interface.hxx
+    Output.hxx
     SetT2KStyle.hxx
 )
 
@@ -28,6 +29,7 @@ set (CORE_SOURCEFILES
     EventDisplay.cxx
     platform_spec.h
     Interface.cxx
+    Output.cxx
 )
 
 # If there were other libraries in this package on which this library depends, then they would be put in this variable

@@ -1,4 +1,5 @@
 #include "Interface.hxx"
+#include "Output.hxx"
 
 #include <iostream>
 
@@ -53,23 +54,16 @@ int main(int argc, char **argv) {
    if (parse_cmd_args(argc, argv, &param) < 0)
     return (-1);
 
+   // define input file and the proper interface to read it
    TString file_name = TString(param.inp_file);
-   std::shared_ptr<InterfaceBase> interface;
-
-   if (file_name.EndsWith(".root")) {
-      interface = std::make_shared<InterfaceROOT>();
-   } else if (file_name.EndsWith(".aqs")) {
-      interface = std::make_shared<InterfaceAQS>();
-   } else {
-      std::cerr << "ERROR in converter. Unknown file type." << std::endl;
-      exit(1);
-   }
+   std::shared_ptr<InterfaceBase> interface = InterfaceFactory::get(file_name);
 
    if (!interface->Initialise(file_name, param.verbose)) {
       std::cerr << "Interface initialisation fails. Exit" << std::endl;
       exit(1);
    }
 
+   // Whether to read silicon tracker stuff
    bool read_tracker = false;
    auto tracker = std::make_shared<InterfaceTracker>();
    if (strcmp(param.tracker_file, "") != 0) {
@@ -85,27 +79,10 @@ int main(int argc, char **argv) {
       file_in = file_in.substr(file_in.find('/') + 1);
    file_in = file_in.substr(0, file_in.find('.'));
 
-  string out_file = param.out_path + file_in + ".root";
+   TString out_file = param.out_path + file_in + ".root";
 
-  // create output file
-  TFile file_out(out_file.c_str(), "NEW");
-   if (!file_out.IsOpen()) {
-      std::cerr << "ROOT file could not be opend." << std::endl;
-      std::cerr << "File probably exists. Prevent overwriting" << std::endl;
-      exit(1);
-   }
-   TTree tree_out("tree", "");
-//    int PadAmpl[geom::nPadx][geom::nPady][n::samples];
-//    tree_out.Branch("PadAmpl", &PadAmpl, Form("PadAmpl_[%i][%i][%i]/I", geom::nPadx, geom::nPady, n::samples));
-
-    auto event = new TRawEvent();
-    tree_out.Branch("TRawEvent", &event, 32000, 0);
-
-   int time_mid, time_msb, time_lsb;
-   float TrackerPos[8];
-
-   if (read_tracker)
-       tree_out.Branch("Tracker", &TrackerPos, Form("TrackerPos[8]/F"));
+   std::shared_ptr<OutputBase> output = std::make_shared<OutputTRawEvent>();
+   output->Initialise(out_file, read_tracker);
 
    // define the output events number
    long int Nevents;
@@ -124,7 +101,6 @@ int main(int argc, char **argv) {
   if (!param.verbose)
     std::cout << "Doing conversion" << "\n[                     ]\r[" << std::flush;
 
-  std::vector<float> tracker_data;
   for (long int i = 0; i < Nevents; ++i) {
     if (param.verbose)
       std::cout << "Working on " << i << std::endl;
@@ -132,28 +108,17 @@ int main(int argc, char **argv) {
       if (i % (Nevents / 20) == 0)
       std::cout << "#" << std::flush;
     }
-    event = interface->GetEvent(i);
-//    int time[3];
-//    interface->GetEvent(i, PadAmpl, time);
-//    time_mid = time[0];
-//    time_msb = time[1];
-//    time_lsb = time[2];
+    output->AddEvent(interface->GetEvent(i));
 
-    tracker_data.clear();
-    for (float & data : TrackerPos)
-      data = -999.;
-    if (tracker->GetEvent(i, tracker_data)) {
-      for (auto it = 0;  it < tracker_data.size(); ++it)
-        if (tracker_data[it] > 0)
-          TrackerPos[it] = tracker_data[it];
+    if (read_tracker) {
+        std::vector<float> tracker_data;
+        tracker->GetEvent(i, tracker_data);
+        output->AddTrackerEvent(tracker_data);
     }
-    tree_out.Fill();
-    delete event;
+    output->Fill();
   } // loop over events
 
-  tree_out.Write("", TObject::kOverwrite);
-  file_out.Write();
-  file_out.Close();
+  output->Finilise();
   std::cout << "\nConversion done" << std::endl;
 
   return 0;

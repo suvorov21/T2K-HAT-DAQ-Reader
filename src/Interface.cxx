@@ -303,6 +303,33 @@ InterfaceTracker::~InterfaceTracker() {
 }
 
 //******************************************************************************
+bool InterfaceRawEvent::Initialise(TString& file_name, int verbose) {
+//******************************************************************************
+  std::cout << "Initialise TRawEvent interface" << std::endl;
+  _verbose = verbose;
+  _file_in = new TFile(file_name.Data());
+  _tree_in = (TTree*)_file_in->Get("EventTree");
+  _event = new TRawEvent();
+  _tree_in->SetBranchAddress("TRawEvent", &_event);
+
+  return true;
+}
+
+//******************************************************************************
+long int InterfaceRawEvent::Scan(int start, bool refresh, int& Nevents_run) {
+//******************************************************************************
+  Nevents_run = -1;
+  return _tree_in->GetEntries();
+}
+
+//******************************************************************************
+TRawEvent* InterfaceRawEvent::GetEvent(long int id) {
+//******************************************************************************
+  _tree_in->GetEntry(id);
+  return _event;
+}
+
+//******************************************************************************
 bool InterfaceTracker::Initialise(TString &file_name, int verbose) {
 //******************************************************************************
   _file.open(file_name);
@@ -342,7 +369,6 @@ void InterfaceTracker::GotoEvent(unsigned int num) {
   _file.clear();
   _file.seekg(std::ios::beg);
   for (int i = 0; i < num; ++i){
-//    _file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
     std::string line_str;
     getline(_file, line_str);
   }

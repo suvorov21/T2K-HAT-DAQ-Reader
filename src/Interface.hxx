@@ -105,7 +105,21 @@ private:
   Mapping _t2k;
 };
 
-// TODO add interface for TRawEvent
+class InterfaceRawEvent: public InterfaceBase {
+ public:
+    explicit InterfaceRawEvent() = default;;
+    ~InterfaceRawEvent() override = default;
+    bool Initialise(TString& file_name, int verbose) override;
+    long int Scan(int start, bool refresh, int& Nevents_run) override;
+    TRawEvent* GetEvent(long int id) override;
+    void GetTrackerEvent(long int id, Float_t pos[8]) override {
+        throw std::logic_error("No tracker info in TRawEvent");
+    }
+ private:
+    TFile* _file_in;
+    TTree* _tree_in;
+    TRawEvent* _event;
+};
 
 /// Silicon tracker file reader
 class InterfaceTracker: public InterfaceBase {
@@ -131,5 +145,30 @@ private:
     ifstream _file;
     std::map<long int, int> _eventPos;
 };
+
+/// Factory returns proper input interface
+class InterfaceFactory {
+ public:
+    static std::shared_ptr<InterfaceBase> get(const TString& file_name) {
+        if (file_name.EndsWith(".aqs")) {
+            return std::make_shared<InterfaceAQS>();
+        }
+
+        if (file_name.EndsWith(".root")) {
+            TFile file(file_name);
+            if (file.Get<TTree>("EventTree")) {
+                return std::make_shared<InterfaceRawEvent>();
+            } else if (file.Get<TTree>("tree")) {
+                return std::make_shared<InterfaceROOT>();
+            } else {
+                std::cerr << "ERROR in converter. Unknown ROOT file type." << std::endl;
+            }
+        };
+
+        std::cerr << "ERROR in converter. Unknown file type." << std::endl;
+        return nullptr;
+    }
+};
+
 
 #endif
