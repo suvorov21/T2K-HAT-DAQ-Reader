@@ -33,7 +33,7 @@ MESSAGE(STATUS ${CMAKE_MODULE_PATH})
 
 pbuilder_prepare_project()
 
-set(CMAKE_CXX_STANDARD 17) # Enable c++14 standard
+set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
 
 ######
 # ROOT
