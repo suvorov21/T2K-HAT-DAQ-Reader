@@ -1,16 +1,15 @@
 #include "Interface.hxx"
 
 #include <cstdio>
-#include <cstring>
 #include <iostream>
 #include <sstream>
 
 //******************************************************************************
-bool InterfaceAQS::Initialise(TString& file_namme, int verbose) {
+bool InterfaceAQS::Initialise(const std::string& file_namme, int verbose) {
 //******************************************************************************
   _verbose = verbose;
   std::cout << "Initialise AQS interface" << std::endl;
-  _param.fsrc = fopen(file_namme, "rb");
+  _fsrc = fopen(file_namme.c_str(), "rb");
   _daq.loadDAQ();
   cout << "...DAQ loaded successfully" << endl;
 
@@ -18,7 +17,7 @@ bool InterfaceAQS::Initialise(TString& file_namme, int verbose) {
   cout << "...Mapping loaded succesfully." << endl;
   _firstEv = -1;
 
-  if (_param.fsrc == nullptr) {
+  if (_fsrc == nullptr) {
     std::cerr << "Input file could not be read" << std::endl;
   }
 
@@ -26,11 +25,11 @@ bool InterfaceAQS::Initialise(TString& file_namme, int verbose) {
 }
 
 //******************************************************************************
-long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
+uint64_t InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
   // Reset _eventPos vector
   // Scan the file
-  DatumContext_Init(&_dc, _param.sample_index_offset_zs);
+  DatumContext_Init(&_dc, _sample_index_offset_zs);
   unsigned short datum;
   int err;
   bool done = true;
@@ -40,17 +39,17 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
     std::cout << "\nScanning the file..." << std::endl;
   if (refresh) {
     _eventPos.clear();
-    fseek(_param.fsrc, 0, SEEK_SET);
+    fseek(_fsrc, 0, SEEK_SET);
     lastRead = 0;
   }
   else {
-    fseek(_param.fsrc, _eventPos[start].first, SEEK_SET);
+    fseek(_fsrc, _eventPos[start].first, SEEK_SET);
   }
 
   _fea.TotalFileByteRead = lastRead;
   while (done) {
     // Read one short word
-    if (fread(&datum, sizeof(unsigned short), 1, _param.fsrc) != 1) {
+    if (fread(&datum, sizeof(unsigned short), 1, _fsrc) != 1) {
       done = false;
     }
     else {
@@ -65,7 +64,7 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
           if (_dc.ItemType == IT_START_OF_EVENT) {
             evnum = (int)_dc.EventNumber;
             if (_firstEv < 0) {
-              if (_verbose > 0)
+              if (_verbose > 1)
                 std::cout << "First event id  " << evnum << "  at  " << _fea.TotalFileByteRead - 6*sizeof(unsigned short) << std::endl;
               _eventPos.emplace_back(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum);
               _firstEv = evnum;
@@ -75,7 +74,7 @@ long int InterfaceAQS::Scan(int start, bool refresh, int& Nevents_run) {
             else if (evnum != prevEvnum) {
               if (_fea.TotalFileByteRead - 6*sizeof(unsigned short) != _eventPos[_eventPos.size()-1].first) {
                 _eventPos.emplace_back(_fea.TotalFileByteRead - 6*sizeof(unsigned short), evnum);
-                if (_verbose > 0) {
+                if (_verbose > 1) {
                   std::cout << "Event " << evnum << " at " << _fea.TotalFileByteRead - 6 * sizeof(unsigned short)
                             << std::endl;
                   std::cout << "time lsb:msb:mid : " << _dc.EventTimeStampLsb << " " << _dc.EventTimeStampMsb << " "
@@ -132,10 +131,10 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
   unsigned short datum;
   int err;
   bool done = true;
-  if (_verbose > 0)
+  if (_verbose > 1)
     std::cout << "\nGetting event #" << id << "  at pos  " << _eventPos[id].first << "  with id  " << _eventPos[id].second << std::endl;;
 
-  fseek(_param.fsrc, _eventPos[id].first, SEEK_SET);
+  fseek(_fsrc, _eventPos[id].first, SEEK_SET);
 
   // clean the padAmpl
   auto event = new TRawEvent(id);
@@ -143,11 +142,11 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
   int eventNumber = -1;
 
   while (done) {
-    if (fread(&datum, sizeof(unsigned short), 1, _param.fsrc) != 1) {
+    if (fread(&datum, sizeof(unsigned short), 1, _fsrc) != 1) {
       done = false;
-      if (ferror(_param.fsrc))
+      if (ferror(_fsrc))
         cout << "\nERROR" << endl;
-      if (feof(_param.fsrc))
+      if (feof(_fsrc))
         cout << "\nreach EOF" << endl;
     } else {
 
@@ -162,7 +161,7 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
       if (_dc.isItemComplete) {
 
         if (_dc.ItemType == IT_START_OF_EVENT) {
-          if (_verbose > 0)
+          if (_verbose > 1)
             std::cout << "Found event with id " << (int)_dc.EventNumber << std::endl;
           event->SetTime(_dc.EventTimeStampMid,
                          _dc.EventTimeStampMsb,
@@ -212,11 +211,11 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
 }
 
 //******************************************************************************
-bool InterfaceROOT::Initialise(TString& file_name, int verbose) {
+bool InterfaceROOT::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
   std::cout << "Initialise ROOT interface" << std::endl;
   _verbose = verbose;
-  _file_in = new TFile(file_name.Data());
+  _file_in = new TFile(file_name.c_str());
   _tree_in = (TTree*)_file_in->Get("tree");
   _use511 = false;
 
@@ -245,7 +244,7 @@ bool InterfaceROOT::Initialise(TString& file_name, int verbose) {
 }
 
 //******************************************************************************
-long int InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
+uint64_t InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
   Nevents_run = -1;
   return _tree_in->GetEntries();
@@ -296,11 +295,11 @@ InterfaceTracker::~InterfaceTracker() {
 }
 
 //******************************************************************************
-bool InterfaceRawEvent::Initialise(TString& file_name, int verbose) {
+bool InterfaceRawEvent::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
   std::cout << "Initialise TRawEvent interface" << std::endl;
   _verbose = verbose;
-  _file_in = new TFile(file_name.Data());
+  _file_in = new TFile(file_name.c_str());
   _tree_in = (TTree*)_file_in->Get("EventTree");
   _event = new TRawEvent();
   _tree_in->SetBranchAddress("TRawEvent", &_event);
@@ -309,7 +308,7 @@ bool InterfaceRawEvent::Initialise(TString& file_name, int verbose) {
 }
 
 //******************************************************************************
-long int InterfaceRawEvent::Scan(int start, bool refresh, int& Nevents_run) {
+uint64_t InterfaceRawEvent::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
   Nevents_run = -1;
   return _tree_in->GetEntries();
@@ -323,7 +322,7 @@ TRawEvent* InterfaceRawEvent::GetEvent(long int id) {
 }
 
 //******************************************************************************
-bool InterfaceTracker::Initialise(TString& file_name, int verbose) {
+bool InterfaceTracker::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
   if (file_name == "")
     return false;
@@ -337,7 +336,7 @@ bool InterfaceTracker::Initialise(TString& file_name, int verbose) {
 }
 
 //******************************************************************************
-long int InterfaceTracker::Scan(int start, bool refresh, int& Nevents_run) {
+uint64_t InterfaceTracker::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
   std::string line_str;
   int line = -1;
@@ -354,7 +353,7 @@ long int InterfaceTracker::Scan(int start, bool refresh, int& Nevents_run) {
     // thanks to fortran, event number starts from 1;
     --event;
     _eventPos[event] = line;
-    if (_verbose) {
+    if (_verbose > 1) {
       std::cout << "Event " << event << " found at line " << line << std::endl;
       std::cout << x1 << "\t" << y1 << "\t" << x2 << "\t" << y2 << std::endl;
     }
@@ -382,7 +381,7 @@ bool InterfaceTracker::GetEvent(long int id, std::vector<float>& data) {
     return false;
 
   GotoEvent(_eventPos[id]);
-  if (_verbose)
+  if (_verbose > 1)
     std::cout << "Reading tracker data for event " << id << std::endl;
   std::string line_str;
   getline(_file, line_str);

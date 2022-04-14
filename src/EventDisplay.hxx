@@ -129,7 +129,7 @@ private:
     int _Nevents_run;
 
 public:
-    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
+    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, std::string name, int verbose);
     virtual ~EventDisplay();
 
 public:

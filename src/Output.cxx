@@ -6,11 +6,21 @@
 
 #include "Output.hxx"
 
-TString OutputBase::getFileName(std::string path, std::string file_in) {
-    while (file_in.find('/') != string::npos)
-        file_in = file_in.substr(file_in.find('/') + 1);
-    file_in = file_in.substr(0, file_in.find('.'));
-    return path + file_in + ".root";
+TString OutputBase::getFileName(const std::string& path, const std::string& file_in) {
+    auto fileName = file_in;
+    while (fileName.find('/') != string::npos)
+        fileName = fileName.substr(fileName.find('/') + 1);
+    fileName = fileName.substr(0, fileName.find('.'));
+    return path + fileName + ".root";
+}
+
+void OutputBase::SetCard(int card) {
+    _card = card;
+}
+
+void OutputBase::Fill() {
+    _tree->Fill();
+    delete _event;
 }
 
 void OutputArray::Initialise(const TString& fileName, bool useTracker) {
@@ -33,11 +43,16 @@ void OutputArray::Initialise(const TString& fileName, bool useTracker) {
 }
 
 void OutputArray::AddEvent(TRawEvent* event) {
+    _event = event;
     _time_mid =  event->GetTimeMid();
     _time_msb =  event->GetTimeMsb();
     _time_lsb =  event->GetTimeLsb();
     memset(_padAmpl, 0, geom::nPadx * geom::nPady * n::samples * (sizeof(Int_t)));
     for (const auto& hit : event->GetHits()) {
+        // doesn't fill the array if the particular card is required
+        if (_card >= 0 && _card != hit->GetCard()) {
+            continue;
+        }
         int x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
         int y = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
 
@@ -46,10 +61,6 @@ void OutputArray::AddEvent(TRawEvent* event) {
             _padAmpl[x][y][hit->GetTime() + t] = v[t];
         }
     }
-}
-
-void OutputArray::Fill() {
-    _tree->Fill();
 }
 
 void OutputArray::AddTrackerEvent(const std::vector<float>& TrackerPos) {
@@ -84,11 +95,6 @@ void OutputTRawEvent::Initialise(const TString& fileName, bool useTracker) {
 
 void OutputTRawEvent::AddEvent(TRawEvent* event) {
     _event = event;
-}
-
-void OutputTRawEvent::Fill() {
-    _tree->Fill();
-    delete _event;
 }
 
 void OutputTRawEvent::AddTrackerEvent(const std::vector<float>& TrackerPos) {

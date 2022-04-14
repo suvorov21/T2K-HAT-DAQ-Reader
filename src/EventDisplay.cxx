@@ -25,7 +25,7 @@ bool doMonitoring;
 EventDisplay::EventDisplay(const TGWindow *p,
                            UInt_t w,
                            UInt_t h,
-                           TString name,
+                           std::string name,
                            int verbose
                            ) : TGMainFrame(p, w, h) {
 //******************************************************************************
