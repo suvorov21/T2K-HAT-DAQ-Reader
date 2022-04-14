@@ -68,4 +68,6 @@ The event monitor could run over both AQS and ROOT files. The interface will be 
 ./app/Monitor -i ~/DATA/R2021_06_10-16_30_21-000.aqs
 ```
 
+![](resources/EventDisplay.png)
+
 The verbosity could be done with `-v1` flag. So far two level of verbosity are available.
