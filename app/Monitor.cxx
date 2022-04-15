@@ -15,7 +15,7 @@ void help()
 }
 
 int main(int argc, char **argv) {
-   TString name = "";
+   std::string name = "";
    int verbose = 0;
    for (;;) {
     int c = getopt(argc, argv, "i:v:");

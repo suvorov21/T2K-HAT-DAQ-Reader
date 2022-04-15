@@ -1,15 +1,16 @@
-image: rootproject/root:6.22.00-centos7
+image: bars21/dev_hep_root:6.24.00gcc9
 
 stages:
   - build
-  - test
 
 compile:
   stage: build
   before_script:
-  script:
+    - . $COMMON_INSTALL_PREFIX/setup.sh
+    - git submodule update --init --recursive
     - mkdir build; cd build
     - gcc -v > ../gcc.log
+  script:
     - cmake3 ../
     - make 2>&1 | tee -a ../gcc.log
   artifacts:

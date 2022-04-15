@@ -25,7 +25,7 @@ bool doMonitoring;
 EventDisplay::EventDisplay(const TGWindow *p,
                            UInt_t w,
                            UInt_t h,
-                           TString name,
+                           std::string name,
                            int verbose
                            ) : TGMainFrame(p, w, h) {
 //******************************************************************************
@@ -38,6 +38,9 @@ EventDisplay::EventDisplay(const TGWindow *p,
   gROOT->SetStyle(_t2kstyle->GetName());
   gROOT->ForceStyle();
 
+  _daq.loadDAQ();
+  _t2k.loadMapping();
+
   Connect("CloseWindow()", "EventDisplay", this, "DoExit()");
   DontCallClose();
   doMonitoring = false;
@@ -47,16 +50,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
     WF[i] = new TH1F(Form("WF_%i", i), "", 511, 0., 511);
 
   // define the file type
-  if (name.EndsWith(".root")) {
-    std::cout << "Use ROOT format" << std::endl;
-    _interface = std::make_shared<InterfaceROOT>();
-  } else if (name.EndsWith(".aqs")) {
-    std::cout << "Use AQS format" << std::endl;
-    _interface = std::make_shared<InterfaceAQS>();
-  } else {
-    std:cerr << "ERROR in monitor. Unknown file type." << std::endl;
-    exit(1);
-  }
+  _interface = InterfaceFactory::get(name);
 
   std::cout << "Opening file " << name << std::endl;
 
@@ -192,6 +186,14 @@ EventDisplay::EventDisplay(const TGWindow *p,
   _accum_time->Draw();
   _total_canv->Update();
 
+  _mmm_canvas = new TCanvas("Multiple MM", "Multiple MM", 1000, 600);
+  _mmm_canvas->Divide(4, 2);
+  for (auto i = 0; i < 8; ++i) {
+    _mmm_canvas->cd(i + 1);
+    _mm[i] = new TH2F(Form("MM_%i", i), Form("MM_%i", i), 38, -1., 37., 34, -1., 33.);;
+    _mm[i]->Draw("colz");
+  }
+
   _tracker_canv = new TCanvas("Tracker", "Tracker", 0, 800, 400, 400);
   _tracker_canv->Divide(2, 2);
   for (auto & tr : _tracker)
@@ -231,46 +233,39 @@ void EventDisplay::DoDraw() {
 
   // read event
   // WARNING due to some bug events MAY BE skipped qt the first read
-  int time[3];
-  _interface->GetEvent(eventID, _padAmpl, time);
-  _interface->GetEvent(eventID, _padAmpl, time);
+  _event = _interface->GetEvent(eventID);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents;
   std::cout << " in the file (" << _Nevents_run << " in run in total)" << std::flush;
   MM->Reset();
-  for (auto x = 0; x < geom::nPadx; ++x) {
-    for (auto y = 0; y < geom::nPady; ++y) {
-      auto max = 0.0001;
-      auto maxt = -1;
-      for (auto t = 0; t < n::samples; ++t) {
-        int Q = 0;
-        Q = _padAmpl[x][y][t] - 250;
+  for (auto i = 0; i < 8; ++i)
+    _mm[i]->Reset();
 
-        if (Q > max) {
-          max = Q;
-          maxt = t;
-        }
-      } // over t
-      if (max > 0.0001 || _rb_palette) {
-        if (_verbose > 1) {
-          std::cout << "x:y:max\t" << x << "\t" << y << "\t" << max << std::endl;
-        }
-        if (fIsTimeModeOn){
-          MM->Fill(x, y, maxt);
-        }
-        else {
-          MM->Fill(x, y, max);
-
-        }
-        if (fill_gloabl) {
-          _accum_ed->Fill(x, y, max);
-          _accum_time->Fill(maxt);
-          eventPrev = eventID;
-        }
+  for (const auto& hit : _event->GetHits()) {
+    auto wf = hit->GetADCvector();
+    auto max = std::max_element(wf.cbegin(), wf.cend());
+    if (*max == 0)
+      continue;
+    auto qMax = *max;
+    auto maxt = hit->GetTime() + (max - wf.begin());
+    auto x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+    auto y = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+    if (hit->GetCard() == 0) {
+      if (fIsTimeModeOn){
+        MM->Fill(x, y, maxt);
+      } else {
+        MM->Fill(x, y, qMax);
       }
+    }
+    _mm[hit->GetCard()]->Fill(x, y, qMax);
 
+    if (fill_gloabl) {
+      _accum_ed->Fill(x, y, qMax);
+      _accum_time->Fill(maxt);
+      eventPrev = eventID;
     }
   }
+
   f_ED_canvas->cd();
   gStyle->SetOptStat(0);
 
@@ -289,6 +284,12 @@ void EventDisplay::DoDraw() {
   gROOT->SetStyle(_t2kstyle->GetName());
   gPad->SetGrid();
   f_ED_canvas->Update();
+
+  for (auto i = 0; i < 8; ++i) {
+    _mmm_canvas->cd(i+1);
+    _mm[i]->Draw("colz");
+  }
+  _mmm_canvas->Update();
 
   auto oldStyle = _rb_palette ? 1 : kBird;
   _t2kstyle->SetPalette(oldStyle);
@@ -392,25 +393,29 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
   f_WF_canvas = fWF->GetCanvas();
   // f_WF_canvas->Clear();
   // f_WF_canvas->Divide(3, 3);
-  for (auto i = 0; i < 9; ++i) {
-    WF[i]->Reset();
-    for (auto t_id = 0; t_id < 510; ++t_id) {
-      if (x+1 > 35 || x-1 < 0 || y+1 > 31 || y-1 < 0)
-        continue;
-      int WF_signal = 0;
-      WF_signal = _padAmpl[x-1+i%3][y+1-i/3][t_id] - 250;
-      if (WF_signal > -250)
-        WF[i]->SetBinContent(t_id, WF_signal);
-      else
-        WF[i]->SetBinContent(t_id, 0);
-    }
 
-    f_WF_canvas->cd(i+1);
-    WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
-    WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
-    WF[i]->Draw("hist");
-    // f_WF_canvas->Modified();
-    // f_WF_canvas->Update();
+  for (const auto& hit : _event->GetHits()) {
+    if (x+1 > 35 || x-1 < 0 || y+1 > 31 || y-1 < 0)
+      continue;
+
+    auto x_i = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+    auto y_i = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+
+    if (abs(x_i - _x_clicked) > 1 || abs(y_i - _y_clicked) > 1)
+      continue;
+
+    int i = (x_i - _x_clicked + 1) % 3 + (- y_i + _y_clicked + 1) * 3;
+    if (i >= 0 && i < 9) {
+      WF[i]->Reset();
+      for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
+        auto ampl = hit->GetADCvector()[t]-250;
+        WF[i]->SetBinContent(hit->GetTime() + t,  ampl > -249 ? ampl : 0);
+      }
+      f_WF_canvas->cd(i+1);
+      WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
+      WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
+      WF[i]->Draw("hist");
+    }
   }
 
   f_WF_canvas->Modified();
@@ -437,25 +442,30 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
 void EventDisplay::DrawWF() {
 //******************************************************************************
   f_WF_canvas = fWF->GetCanvas();
-  for (auto i = 0; i < 9; ++i) {
-    WF[i]->Reset();
-    for (auto t_id = 0; t_id < 510; ++t_id) {
-      if (_x_clicked+1 > 35 || _x_clicked-1 < 0 || _y_clicked+1 > 31 || _y_clicked-1 < 0)
-        return;
-      int WF_signal = 0;
-      WF_signal = _padAmpl[_x_clicked-1+i%3][_y_clicked+1-i/3][t_id] - 250;
-      if (WF_signal > -250)
-        WF[i]->SetBinContent(t_id, WF_signal);
-      else
-        WF[i]->SetBinContent(t_id, 0);
-    }
+  for (const auto& hit : _event->GetHits()) {
+    if (_x_clicked+1 > 35 || _x_clicked-1 < 0 || _y_clicked+1 > 31 || _y_clicked-1 < 0)
+      continue;
 
-    f_WF_canvas->cd(i+1);
-    WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
-    WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
-    WF[i]->Draw("hist");
-    f_WF_canvas->Modified();
-    f_WF_canvas->Update();
+    auto x_i = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+    auto y_i = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+
+    if (abs(x_i - _x_clicked) > 1 || abs(y_i - _y_clicked) > 1)
+      continue;
+
+    int i = (x_i - _x_clicked + 1) % 3 + (- y_i + _y_clicked + 1) * 3;
+    if (i >= 0 && i < 9) {
+      WF[i]->Reset();
+      for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
+        auto ampl = hit->GetADCvector()[t]-250;
+        WF[i]->SetBinContent(hit->GetTime() + t, ampl > -249 ? ampl : 0);
+      }
+      f_WF_canvas->cd(i + 1);
+      WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
+      WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
+      WF[i]->Draw("hist");
+      f_WF_canvas->Modified();
+      f_WF_canvas->Update();
+    }
   }
 
   f_ED_canvas = fED->GetCanvas();

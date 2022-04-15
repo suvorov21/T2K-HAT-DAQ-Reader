@@ -1,2 +1,9 @@
 build/
 T2KConstants.h
+*.root
+*.aqs
+*.d
+*.so
+*.pcm
+cmake-build-debug
+.idea

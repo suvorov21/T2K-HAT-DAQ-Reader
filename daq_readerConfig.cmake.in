@@ -1,0 +1,7 @@
+# DAQConfig.cmake
+
+get_filename_component( daq_reader_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+
+include( CMakeFindDependencyMacro )
+
+include("${DAQ_reader_CMAKE_DIR}/daq_reader_Library_Targets.cmake")

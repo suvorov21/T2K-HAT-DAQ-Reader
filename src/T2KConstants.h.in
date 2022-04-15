@@ -43,6 +43,7 @@ namespace geom
     static const int times = 1;
     static const float convx = 1.;//0.85*float(wx)/(nPadx*dx); // conversion factor
     static const float convy = convx; // conversion factor
+    static const int nModules = 16;
 }
 
 

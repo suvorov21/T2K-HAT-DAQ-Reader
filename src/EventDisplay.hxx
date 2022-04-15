@@ -51,6 +51,12 @@ private:
     /// Input interfaces
     std::shared_ptr<InterfaceBase> _interface;
 
+    /// Mappings
+    DAQ _daq;
+    Mapping _t2k;
+
+    TRawEvent* _event;
+
     // WF plotter params
     TH2F* MM;
     TH1F* WF[9];
@@ -60,8 +66,6 @@ private:
     /// amplitude bounds for the WF histoes
     Int_t fWF_ampl_min = -300;
     Int_t fWF_ampl_max = 4000;
-    /// data representation
-    Int_t _padAmpl[geom::nPadx][geom::nPady][n::samples];
 
     // GUI
     TCanvas *f_ED_canvas;
@@ -99,6 +103,10 @@ private:
     TH2F* _accum_ed;
     TH1F* _accum_time;
 
+    /// Multiple Micromegas canvas
+    TCanvas* _mmm_canvas;
+    TH2F* _mm[8];
+
     /// Tracker info
     TCanvas* _tracker_canv;
     TGraphErrors* _tracker[4];
@@ -121,7 +129,7 @@ private:
     int _Nevents_run;
 
 public:
-    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, TString name, int verbose);
+    EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, std::string name, int verbose);
     virtual ~EventDisplay();
 
 public:

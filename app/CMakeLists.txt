@@ -2,19 +2,20 @@
 #   Applications     #
 ######################
 
-set (APPLICATIONS_HEADERFILES
+set(exe_sources Converter.cxx
+                Monitor.cxx)
+set(exe_libraries TCore)
 
+pbuilder_executables(
+        SOURCES ${exe_sources}
+        TARGETS_VAR programs
+        PROJECT_LIBRARIES ${exe_libraries}
+        PUBLIC_EXTERNAL_LIBRARIES ${PUBLIC_EXT_LIBS}
+        PRIVATE_EXTERNAL_LIBRARIES ${PRIVATE_EXT_LIBS}
 )
 
-set (APPLICATIONS_DEP_LIBRARIES
-    CCore
+# Installation of executable
+pbuilder_component_install_and_export(
+       COMPONENT Executables
+       EXETARGETS ${programs}
 )
-
-
-set (APPLICATIONS_PROGRAMS
-    Converter
-    Monitor
-)
-
-pbuilder_executables( APPLICATIONS_PROGRAMS APPLICATIONS_DEP_LIBRARIES )
-pbuilder_install_headers (${APPLICATIONS_HEADERFILES})
