@@ -47,6 +47,10 @@ else (ROOT_FOUND)
     message(FATAL "Unable to find ROOT")
 endif (ROOT_FOUND)
 
+if(ROOT_CXX_FLAGS MATCHES "-std=c\\+\\+17")
+    set(CMAKE_CXX_STANDARD 17)
+endif()
+
 # include(${ROOT_USE_FILE})
 include_directories (${ROOT_INCLUDE_DIR})
 LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
