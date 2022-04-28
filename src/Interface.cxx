@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <midasio.h>
+
 //******************************************************************************
 bool InterfaceAQS::Initialise(const std::string& file_namme, int verbose) {
 //******************************************************************************
@@ -330,16 +332,96 @@ bool InterfaceMidas::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
     if (file_name == "")
         return false;
-    _file.open(file_name);
+    _reader = TMNewReader(file_name.c_str());
     _verbose = verbose;
-    if (!_file.is_open()) {
-        std::cerr << "Midas file is specified, but could not be opened" << std::endl;
+    if (_reader->fError) {
+        std::cout << "Cannot open input file " <<  file_name << std::endl;
+        delete _reader;
         return false;
     }
+    std::cout << "Opened " <<  file_name << std::endl;
     return true;
 }
 
+//******************************************************************************
+uint64_t InterfaceMidas::Scan(int start, bool refresh, int& Nevents_run) {
+//******************************************************************************
 
+    Nevents_run = -1;
+    uint64_t number = 0;
+    while (number < 2) {
+        TMEvent *e = TMReadEvent(_reader);
+
+        if (!e) {
+            // EOF
+            delete e;
+            break;
+        }
+
+        if (e->error) {
+            // broken event
+            printf("event with error, bye!\n");
+            delete e;
+            break;
+        }
+        e->FindAllBanks();
+        if (e->banks.size() == 0){
+            std::cout << "skipping" << std::endl;
+            continue;
+        }
+
+
+        auto bankTDCM = e->FindBank("TDCM");
+//        std::cout << bankTDCM ->type << "\t" << bankTDCM->data_size << std::endl;
+
+        auto bankCOUN = e->FindBank("COUN");
+//        std::cout << bankCOUN ->type << "\t" << bankCOUN->data_size << std::endl;
+
+        auto bankFEMC = e->FindBank("FEMC");
+//        std::cout << bankFEMC ->type << "\t" << bankFEMC->data_size << std::endl;
+
+        auto bankChip = e->FindBank("CHIP");
+//        std::cout << bankChip ->type << "\t" << bankChip->data_size << std::endl;
+
+        auto bankChan = e->FindBank("CHAN");
+//        std::cout << bankChan ->type << "\t" << bankChan->data_size << std::endl;
+
+        auto bankNWAV = e->FindBank("NWAV");
+//        std::cout << bankNWAV ->type << "\t" << bankNWAV->data_size << std::endl;
+
+        auto bankNADC = e->FindBank("NADC");
+        auto bankWAVE = e->FindBank("WAVE");
+        auto bankTBIN = e->FindBank("TBIN");
+
+
+        auto tdcm = static_cast<unsigned int>(e->GetBankData(bankTDCM)[0]);
+        auto count = static_cast<unsigned int>(e->GetBankData(bankCOUN)[0]);
+        auto vwav = static_cast<unsigned int>(e->GetBankData(bankNWAV)[0]);
+        std::cout << "Event number: " << count << std::endl;
+        std::cout << "-> TDCM: " << tdcm << "->" << vwav << std::endl;
+        unsigned int iterCharge = 0;
+        for (int i =0; i < bankFEMC->data_size; i++) {
+            auto femc = static_cast<unsigned int>(e->GetBankData(bankFEMC)[i]);
+            auto chip = static_cast<unsigned int>(e->GetBankData(bankChip)[i]);
+            auto chan = static_cast<unsigned int>(e->GetBankData(bankChan)[i]);
+            auto nadc = static_cast<unsigned int>(e->GetBankData(bankNADC)[i]);
+            std::cout << "--> ID: " << femc << ";" << chip << ";" << chan << ";" << nadc << std::endl;
+            for (int iterAdc = 0; iterAdc < nadc; iterAdc+=2){
+                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterCharge]) << "\t" << static_cast<unsigned int>(e->GetBankData(bankWAVE)[iterCharge]) << std::endl;
+                iterCharge+=2;
+//                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterAdc/2]) << "\t" << static_cast<unsigned int>(static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc]) | static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc+1]) << 8) << std::endl;
+            }
+        }
+        number++;
+    }
+    return number;
+}
+
+TRawEvent* InterfaceMidas::GetEvent(long id) {
+    auto event = new TRawEvent(id);
+    return event;
+
+}
 
 //******************************************************************************
 // TRACKER INTERFACE

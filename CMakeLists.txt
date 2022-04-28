@@ -65,6 +65,7 @@ include_directories (
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/external/hat_event
     ${PROJECT_SOURCE_DIR}/external/hat_event/src/
+    ${PROJECT_SOURCE_DIR}/external/midasio
     ${PROJECT_SOURCE_DIR}/external/cli_parser/include
 )
 

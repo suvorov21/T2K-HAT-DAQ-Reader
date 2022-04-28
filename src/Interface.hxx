@@ -13,6 +13,7 @@
 #include "Mapping.h"
 #include "DAQ.h"
 #include "TRawEvent.hxx"
+#include "midasio.h"
 
 static int tmp = -1;
 
@@ -115,15 +116,17 @@ public:
     explicit InterfaceMidas() = default;
     ~InterfaceMidas() override = default;
     bool Initialise(const std::string &file_name, int verbose) override;
-//    uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
-//    TRawEvent *GetEvent(long int id) override;
+    uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
+    TRawEvent *GetEvent(long int id);
     void GetTrackerEvent(long int id, Float_t pos[8]) override {
         throw std::logic_error("No tracker info in TRawEvent");
     }
 private:
-    ifstream _file;
+//    ifstream _file;
+    TMReaderInterface* _reader;
 //    TTree *_tree_in;
     TRawEvent *_event;
+
 };
 
 /// Silicon tracker file reader
@@ -157,6 +160,9 @@ class InterfaceFactory {
     static std::shared_ptr<InterfaceBase> get(const TString &file_name) {
         if (file_name.EndsWith(".aqs")) {
             return std::make_shared<InterfaceAQS>();
+        }
+        if (file_name.EndsWith(".mid.lz4")) {
+            return std::make_shared<InterfaceMidas>();
         }
 
         if (file_name.EndsWith(".root")) {
