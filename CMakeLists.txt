@@ -28,12 +28,12 @@ list(APPEND CMAKE_MODULE_PATH
         ${PROJECT_SOURCE_DIR}/external/hat_event/cmake)
 include(PackageBuilder)
 
-MESSAGE(STATUS ${CMAKE_MODULE_PATH})
-
-
 pbuilder_prepare_project()
 
 set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
+
+
+option( ENABLE_MIDASIO "Link the midasio libs to the project." ON )
 
 ######
 # ROOT
@@ -52,6 +52,8 @@ include_directories (${ROOT_INCLUDE_DIR})
 LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
 
 pbuilder_add_submodule(hat_event ${PROJECT_SOURCE_DIR}/external/hat_event)
+
+pbuilder_add_submodule(midasio ${PROJECT_SOURCE_DIR}/external/midasio)
 
 #########
 # sources

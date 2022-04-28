@@ -322,6 +322,30 @@ TRawEvent* InterfaceRawEvent::GetEvent(long int id) {
 }
 
 //******************************************************************************
+// MIDAS INTERFACE
+//******************************************************************************
+
+//******************************************************************************
+bool InterfaceMidas::Initialise(const std::string& file_name, int verbose) {
+//******************************************************************************
+    if (file_name == "")
+        return false;
+    _file.open(file_name);
+    _verbose = verbose;
+    if (!_file.is_open()) {
+        std::cerr << "Midas file is specified, but could not be opened" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+
+
+//******************************************************************************
+// TRACKER INTERFACE
+//******************************************************************************
+
+//******************************************************************************
 bool InterfaceTracker::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
   if (file_name == "")
