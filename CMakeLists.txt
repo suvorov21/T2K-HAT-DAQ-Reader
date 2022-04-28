@@ -23,6 +23,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
+set(PBUILDER ON)
 list(APPEND CMAKE_MODULE_PATH
         ${PROJECT_SOURCE_DIR}/cmake
         ${PROJECT_SOURCE_DIR}/external/hat_event/cmake)
