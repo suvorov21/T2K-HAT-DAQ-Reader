@@ -23,6 +23,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
+set(PBUILDER ON)
 list(APPEND CMAKE_MODULE_PATH
         ${PROJECT_SOURCE_DIR}/cmake
         ${PROJECT_SOURCE_DIR}/external/hat_event/cmake)
@@ -46,6 +47,10 @@ if (ROOT_FOUND)
 else (ROOT_FOUND)
     message(FATAL "Unable to find ROOT")
 endif (ROOT_FOUND)
+
+if(ROOT_CXX_FLAGS MATCHES "-std=c\\+\\+17")
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 # include(${ROOT_USE_FILE})
 include_directories (${ROOT_INCLUDE_DIR})
