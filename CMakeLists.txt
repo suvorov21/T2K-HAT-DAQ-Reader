@@ -82,3 +82,7 @@ pbuilder_do_package_config()
 
 configure_file(this_daq.sh.in this_daq.sh)
 pbuilder_install_files(${BIN_INSTALL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/this_daq.sh)
+
+add_custom_target(install_${PROJECT_NAME}
+        "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
+        COMMENT "Installing ${PROJECT_NAME}")
