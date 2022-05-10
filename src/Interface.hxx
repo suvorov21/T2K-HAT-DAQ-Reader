@@ -113,7 +113,7 @@ class InterfaceRawEvent : public InterfaceBase {
 
 class InterfaceMidas : public InterfaceBase {
 public:
-    explicit InterfaceMidas() = default;
+    explicit InterfaceMidas(){_currentEvent = new TMEvent();};
     ~InterfaceMidas() override = default;
     bool Initialise(const std::string &file_name, int verbose) override;
     uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
@@ -121,9 +121,19 @@ public:
     void GetTrackerEvent(long int id, Float_t pos[8]) override {
         throw std::logic_error("No tracker info in TRawEvent");
     }
+
 private:
-//    ifstream _file;
+    TMEvent* GoToEvent(long int id);
+    bool IsValid(TMEvent*);
+    unsigned int GetUIntFromBank(char*);
+    unsigned short GetUShortFromBank(char*);
+    std::vector<unsigned short> GetUShortVectorFromBank(char*, unsigned int = 0);
+    std::vector<unsigned short> GetUCharVectorFromBank(char*, unsigned int = 0);
+private:
+    std::string _filename;
     TMReaderInterface* _reader;
+    unsigned int _currentEventIndex{0};
+    TMEvent* _currentEvent{};
 //    TTree *_tree_in;
     TRawEvent *_event;
 

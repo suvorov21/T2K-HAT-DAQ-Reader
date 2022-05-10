@@ -340,6 +340,7 @@ bool InterfaceMidas::Initialise(const std::string& file_name, int verbose) {
         return false;
     }
     std::cout << "Opened " <<  file_name << std::endl;
+    _filename = file_name;
     return true;
 }
 
@@ -347,80 +348,269 @@ bool InterfaceMidas::Initialise(const std::string& file_name, int verbose) {
 uint64_t InterfaceMidas::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
 
-    Nevents_run = -1;
-    uint64_t number = 0;
-    while (number < 2) {
-        TMEvent *e = TMReadEvent(_reader);
+    unsigned int events_number = 0;
+    if (start < _currentEventIndex){
+        delete _reader;
+        _reader = TMNewReader(_filename.c_str());
+        _currentEventIndex = 0;
+    }
+//    uint64_t number = 0;
+    while (true) {
+        _currentEvent = TMReadEvent(_reader);
 
-        if (!e) {
+        if (!_currentEvent) {
             // EOF
-            delete e;
+            delete _currentEvent;
             break;
         }
 
-        if (e->error) {
+        if (_currentEvent->error) {
             // broken event
             printf("event with error, bye!\n");
-            delete e;
+            delete _currentEvent;
             break;
         }
-        e->FindAllBanks();
-        if (e->banks.size() == 0){
-            std::cout << "skipping" << std::endl;
-            continue;
-        }
-
-
-        auto bankTDCM = e->FindBank("TDCM");
-//        std::cout << bankTDCM ->type << "\t" << bankTDCM->data_size << std::endl;
-
-        auto bankCOUN = e->FindBank("COUN");
-//        std::cout << bankCOUN ->type << "\t" << bankCOUN->data_size << std::endl;
-
-        auto bankFEMC = e->FindBank("FEMC");
-//        std::cout << bankFEMC ->type << "\t" << bankFEMC->data_size << std::endl;
-
-        auto bankChip = e->FindBank("CHIP");
-//        std::cout << bankChip ->type << "\t" << bankChip->data_size << std::endl;
-
-        auto bankChan = e->FindBank("CHAN");
-//        std::cout << bankChan ->type << "\t" << bankChan->data_size << std::endl;
-
-        auto bankNWAV = e->FindBank("NWAV");
-//        std::cout << bankNWAV ->type << "\t" << bankNWAV->data_size << std::endl;
-
-        auto bankNADC = e->FindBank("NADC");
-        auto bankWAVE = e->FindBank("WAVE");
-        auto bankTBIN = e->FindBank("TBIN");
-
-
-        auto tdcm = static_cast<unsigned int>(e->GetBankData(bankTDCM)[0]);
-        auto count = static_cast<unsigned int>(e->GetBankData(bankCOUN)[0]);
-        auto vwav = static_cast<unsigned int>(e->GetBankData(bankNWAV)[0]);
-        std::cout << "Event number: " << count << std::endl;
-        std::cout << "-> TDCM: " << tdcm << "->" << vwav << std::endl;
-        unsigned int iterCharge = 0;
-        for (int i =0; i < bankFEMC->data_size; i++) {
-            auto femc = static_cast<unsigned int>(e->GetBankData(bankFEMC)[i]);
-            auto chip = static_cast<unsigned int>(e->GetBankData(bankChip)[i]);
-            auto chan = static_cast<unsigned int>(e->GetBankData(bankChan)[i]);
-            auto nadc = static_cast<unsigned int>(e->GetBankData(bankNADC)[i]);
-            std::cout << "--> ID: " << femc << ";" << chip << ";" << chan << ";" << nadc << std::endl;
-            for (int iterAdc = 0; iterAdc < nadc; iterAdc+=2){
-                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterCharge]) << "\t" << static_cast<unsigned int>(e->GetBankData(bankWAVE)[iterCharge]) << std::endl;
-                iterCharge+=2;
-//                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterAdc/2]) << "\t" << static_cast<unsigned int>(static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc]) | static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc+1]) << 8) << std::endl;
-            }
-        }
-        number++;
+//        e->FindAllBanks();
+//        if (e->banks.size() == 0){
+//            std::cout << "skipping" << std::endl;
+//            continue;
+//        }
+//
+//
+//        auto bankTDCM = e->FindBank("TDCM");
+////        std::cout << bankTDCM ->type << "\t" << bankTDCM->data_size << std::endl;
+//
+//        auto bankCOUN = e->FindBank("COUN");
+////        std::cout << bankCOUN ->type << "\t" << bankCOUN->data_size << std::endl;
+//
+//        auto bankFEMC = e->FindBank("FEMC");
+////        std::cout << bankFEMC ->type << "\t" << bankFEMC->data_size << std::endl;
+//
+//        auto bankChip = e->FindBank("CHIP");
+////        std::cout << bankChip ->type << "\t" << bankChip->data_size << std::endl;
+//
+//        auto bankChan = e->FindBank("CHAN");
+////        std::cout << bankChan ->type << "\t" << bankChan->data_size << std::endl;
+//
+//        auto bankNWAV = e->FindBank("NWAV");
+////        std::cout << bankNWAV ->type << "\t" << bankNWAV->data_size << std::endl;
+//
+//        auto bankNADC = e->FindBank("NADC");
+//        auto bankWAVE = e->FindBank("WAVE");
+//        auto bankTBIN = e->FindBank("TBIN");
+//
+//
+//        auto tdcm = static_cast<unsigned int>(e->GetBankData(bankTDCM)[0]);
+//        auto count = static_cast<unsigned int>(e->GetBankData(bankCOUN)[0]);
+//        auto vwav = static_cast<unsigned int>(e->GetBankData(bankNWAV)[0]);
+//        std::cout << "Event number: " << count << std::endl;
+//        std::cout << "-> TDCM: " << tdcm << "->" << vwav << std::endl;
+//        unsigned int iterCharge = 0;
+//        for (int i =0; i < bankFEMC->data_size; i++) {
+//            auto femc = static_cast<unsigned int>(e->GetBankData(bankFEMC)[i]);
+//            auto chip = static_cast<unsigned int>(e->GetBankData(bankChip)[i]);
+//            auto chan = static_cast<unsigned int>(e->GetBankData(bankChan)[i]);
+//            auto nadc = static_cast<unsigned int>(e->GetBankData(bankNADC)[i]);
+//            std::cout << "--> ID: " << femc << ";" << chip << ";" << chan << ";" << nadc << std::endl;
+//            for (int iterAdc = 0; iterAdc < nadc; iterAdc+=2){
+//                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterCharge]) << "\t" << static_cast<unsigned int>(e->GetBankData(bankWAVE)[iterCharge]) << std::endl;
+//                iterCharge+=2;
+////                std::cout << "---> " <<static_cast<unsigned int>(e->GetBankData(bankTBIN)[iterAdc/2]) << "\t" << static_cast<unsigned int>(static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc]) | static_cast<unsigned short>(e->GetBankData(bankNWAV)[iterAdc+1]) << 8) << std::endl;
+//            }
+//        }
+        _currentEventIndex++;
+        events_number++;
     }
-    return number;
+    return events_number;
 }
 
 TRawEvent* InterfaceMidas::GetEvent(long id) {
-    auto event = new TRawEvent(id);
+    if (id >= 150 or id <= 80){
+        return nullptr;
+    }
+    TMEvent* midas_event = GoToEvent(id);
+    if (midas_event == nullptr){
+        std::cerr << "Cannot go to event id " << id << std::endl;
+        exit(1);
+    }
+    midas_event->FindAllBanks();
+    if (midas_event->error){
+//        std::cerr << "Error with banks of event " << id << std::endl;
+        return nullptr;
+    }
+
+
+    /// Get event number
+    auto bank_count = midas_event->FindBank("COUN");
+//    std::cout << bank_count->data_size << std::endl;
+    unsigned int event_number = 0;
+//    event_number = (unsigned int)((unsigned char)(midas_event->GetBankData(bank_count)[3] << 24) +
+//            ((unsigned char)midas_event->GetBankData(bank_count)[2] << 16) +
+//            ((unsigned char)midas_event->GetBankData(bank_count)[1] << 8) +
+//            ((unsigned char)midas_event->GetBankData(bank_count)[0] << 0));
+
+    event_number = GetUIntFromBank(midas_event->GetBankData(bank_count));
+//    event_number |= midas_event->GetBankData(bank_count)[3] << 24;
+//    event_number |= midas_event->GetBankData(bank_count)[2] << 16;
+//    event_number |= midas_event->GetBankData(bank_count)[1] << 8;
+//    event_number |= midas_event->GetBankData(bank_count)[0];
+    if (event_number != id){std::cout << "Error " << event_number << "\t" << id << "\t" << std::bitset<32>(event_number) << std::endl;}
+    std::cout << "Event number: " << event_number << std::endl;
+
+    /// Define TRawEvent
+    auto event = new TRawEvent(event_number);
+
+    /// Get timing of the event
+    auto bank_tmsb = midas_event->FindBank("TMSB");
+    auto tmsb = GetUShortFromBank(midas_event->GetBankData(bank_tmsb));
+    auto bank_tmid = midas_event->FindBank("TMID");
+    auto tmid = GetUShortFromBank(midas_event->GetBankData(bank_tmid));
+    auto bank_tlsb = midas_event->FindBank("TLSB");
+    auto tlsb = GetUShortFromBank(midas_event->GetBankData(bank_tlsb));
+    event->SetTime(tmid,tmsb,tlsb);
+    std::cout << "-> Times: " << tmsb << "\t" << tmid << "\t" << tlsb << std::endl;
+
+    /// Get number of waveforms
+    auto bank_nwav = midas_event->FindBank("NWAV");
+    auto waveformsNumber = GetUShortFromBank(midas_event->GetBankData(bank_nwav));
+    if (waveformsNumber <= 0){
+        std::cout << "No waveform in event " << id << std::endl;
+        return nullptr;
+    }
+    std::cout << "-> Number of waveforms: " << waveformsNumber << std::endl;
+
+    unsigned short version = 0;
+    /// version 1
+    auto bank_femc = midas_event->FindBank("FEMC");
+    auto bank_chip = midas_event->FindBank("CHIP");
+    auto bank_chan = midas_event->FindBank("CHAN");
+    auto bank_tbin = midas_event->FindBank("TBIN");
+    auto bank_wave = midas_event->FindBank("WAVE");
+    if (bank_femc){
+        version = 1;
+    }
+
+    /// version 2
+    auto bank_chid = midas_event->FindBank("CHID");
+    auto bank_tmin = midas_event->FindBank("TMIN");
+    auto bank_tmax = midas_event->FindBank("TMAX");
+    if (bank_chid and version == 0) {
+        version = 2;
+    }
+
+    std::cout << "-> Data format version: " << version << std::endl;
+
+    event->Reserve(waveformsNumber);
+    TRawHit* hit;
+    auto femc_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_femc), waveformsNumber);
+    auto chip_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chip), waveformsNumber);
+    auto chan_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chan), waveformsNumber);
+    for (int i =0; i < waveformsNumber; i++) {
+        if (version == 1){
+//            auto femc = static_cast<unsigned int>(midas_event->GetBankData(bank_femc)[i]);
+//            auto chip = static_cast<unsigned int>(midas_event->GetBankData(bank_chip)[i]);
+//            auto chan = static_cast<unsigned int>(midas_event->GetBankData(bank_chan)[i]);
+            std::cout << "--> " << femc_vector[i] << "\t" << chip_vector[i] << "\t" << chan_vector[i] << std::endl;
+            hit = new TRawHit(femc_vector[i], chip_vector[i], chan_vector[i]);
+
+        }
+        event->AddHit(hit);
+//        auto chip = static_cast<unsigned int>(midas_event->GetBankData(bankChip)[i]);
+//        auto chan = static_cast<unsigned int>(midas_event->GetBankData(bankChan)[i]);
+    }
     return event;
 
+}
+
+TMEvent* InterfaceMidas::GoToEvent(long id) {
+
+    // if the index is too far away, we need to move to the right location
+    if (id < _currentEventIndex){
+        delete _reader;
+        _reader = TMNewReader(_filename.c_str());
+        _currentEvent = TMReadEvent(_reader);
+        if (!IsValid(_currentEvent)) {
+            // EOF
+            _currentEvent = nullptr;
+            std::cerr << "End of file was reached during initialization" << std::endl;
+            return nullptr;
+        }
+        _currentEventIndex = 0;
+    }
+
+    /// TODO there might be a better way to go to an event, but the midasio lib doesn't allow this with a user-friendly method
+//    TMEvent *e = nullptr;
+    while (id > _currentEventIndex){
+        _currentEvent = TMReadEvent(_reader); // read but drops the event
+        if (!IsValid(_currentEvent)) {
+            // EOF
+            std::cerr << "End of file was reached while " << id << " was requested!" << std::endl;
+            return nullptr;
+        }
+        _currentEventIndex++;
+    }
+    // if the current index is the right one, nothing to do
+    if (id == _currentEventIndex){
+        return _currentEvent;
+    }
+    else {
+        std::cerr << "Event id " << _currentEventIndex << " was found while " << id << " was requested!" << std::endl;
+        return nullptr;
+    }
+    return nullptr;
+}
+
+
+bool InterfaceMidas::IsValid(TMEvent* event) {
+    if (!event) {
+        printf("nulltptr event, bye!\n");
+        return false;
+    }
+
+    if (event->error) {
+        // broken event
+        printf("event with error, bye!\n");
+        delete event;
+        return false;
+    }
+    return true;
+}
+
+unsigned int InterfaceMidas::GetUIntFromBank(char * data) {
+    unsigned int value = 0;
+    value = (unsigned int)((unsigned char)(data[3] << 24) +
+                                  (unsigned char)(data[2] << 16) +
+                                  (unsigned char)(data[1] << 8) +
+                                  (unsigned char)(data[0] << 0));
+    return value;
+}
+
+unsigned short InterfaceMidas::GetUShortFromBank(char * data) {
+    unsigned short value = 0;
+    value = (unsigned short)(((unsigned char)data[1] << 8) +
+                           ((unsigned char)data[0] << 0));
+    return value;
+    return 0;
+}
+
+std::vector<unsigned short> InterfaceMidas::GetUShortVectorFromBank(char * data, unsigned int nvalues) {
+    std::vector<unsigned short> vector;
+    vector.resize(nvalues);
+    for (int i = 0; i < nvalues; i++){
+        vector[i] = (unsigned short)(((unsigned char)data[2*i+1] << 8) +
+                                     ((unsigned char)data[2*i] << 0));
+    }
+    return vector;
+}
+
+std::vector<unsigned short> InterfaceMidas::GetUCharVectorFromBank(char * data, unsigned int nvalues) {
+    std::vector<unsigned short> vector;
+//    unsigned int len_vector = nvalues % 2;
+    vector.resize(nvalues);
+    for (int i = 0; i < nvalues; i++){
+        vector[i] = (unsigned short)(((unsigned char)data[i] << 0));
+    }
+    return vector;
 }
 
 //******************************************************************************
