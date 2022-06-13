@@ -65,6 +65,10 @@ EventDisplay::EventDisplay(const TGWindow *p,
     std::cerr << "Empty file!" << std::endl;
     exit(1);
   }
+  else
+  {
+    std::cout << "Found " << Nevents << "events" << std::endl;
+  }
 
   // ini GUI
   auto* fMain = new TGHorizontalFrame(this, w, h);
@@ -219,6 +223,7 @@ void EventDisplay::DoExit() {
 //******************************************************************************
 void EventDisplay::DoDraw() {
 //******************************************************************************
+  _daq.printDAQ2Fec();
   if (eventID >= Nevents) {
     std::cout << "EOF" << std::endl;
     eventID = Nevents - 1;
@@ -245,7 +250,9 @@ void EventDisplay::DoDraw() {
     auto wf = hit->GetADCvector();
     auto max = std::max_element(wf.cbegin(), wf.cend());
     if (*max == 0)
-      continue;
+    {
+        continue;
+    }
     auto qMax = *max;
     auto maxt = hit->GetTime() + (max - wf.begin());
     auto x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));

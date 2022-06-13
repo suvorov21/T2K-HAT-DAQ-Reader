@@ -28,6 +28,7 @@ void DAQ::loadDAQ()
         fec2daq[fec]=daq;
         daq2fec[daq]=fec;
     }
+//    printDAQ2Fec();
     ffec2daq.close();
 
 }
