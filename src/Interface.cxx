@@ -453,7 +453,7 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
     unsigned int wave_counter = 0;
     for (int i =0; i < waveformsNumber; i++) {
         if (version == 1){
-            std::cout << "Version 1" << std::endl;
+//            std::cout << "Version 1" << std::endl;
             if (chan_vector[i] == 15 or chan_vector[i] == 28 or chan_vector[i] == 53 or chan_vector[i] == 66 or chan_vector[i] <= 2 or chan_vector[i] >= 79)
             {
               std::cout << "Cannot process this channel: " << chan_vector[i] << std::endl;

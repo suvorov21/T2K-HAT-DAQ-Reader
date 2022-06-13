@@ -223,7 +223,7 @@ void EventDisplay::DoExit() {
 //******************************************************************************
 void EventDisplay::DoDraw() {
 //******************************************************************************
-  _daq.printDAQ2Fec();
+//  _daq.printDAQ2Fec();
   if (eventID >= Nevents) {
     std::cout << "EOF" << std::endl;
     eventID = Nevents - 1;
