@@ -266,6 +266,13 @@ void EventDisplay::DoDraw() {
     }
   }
 
+	double minZ{std::nan("unset")}, maxZ{std::nan("unset")};
+	for(auto& mmHist : _mm){
+		if(minZ != minZ or minZ > mmHist->GetMinimum()) minZ = mmHist->GetMinimum();
+		if(maxZ != maxZ or maxZ < mmHist->GetMaximum()) maxZ = mmHist->GetMaximum();
+	}
+	for(auto& mmHist : _mm){ mmHist->GetZaxis()->SetRangeUser(minZ, maxZ); }
+
   f_ED_canvas->cd();
   gStyle->SetOptStat(0);
 
