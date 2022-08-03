@@ -129,6 +129,13 @@ private:
     unsigned short GetUShortFromBank(char*);
     std::vector<unsigned short> GetUShortVectorFromBank(char*, unsigned int = 0);
     std::vector<unsigned short> GetUCharVectorFromBank(char*, unsigned int = 0);
+    unsigned short ExtractFemCard(unsigned short data);
+    unsigned short ExtractChipId(unsigned short data);
+    unsigned short ExtractChanId(unsigned short data);
+//    std::vector<unsigned short> GetFemCardVectorFromBank(char*, unsigned int = 0);
+//    std::vector<unsigned short> GetChipVectorFromBank(char*, unsigned int = 0);
+//    std::vector<unsigned short> GetChanVectorFromBank(char*, unsigned int = 0);
+
 private:
     std::string _filename;
     TMReaderInterface* _reader;

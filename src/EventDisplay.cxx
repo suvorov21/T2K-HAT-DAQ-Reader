@@ -248,6 +248,9 @@ void EventDisplay::DoDraw() {
 
   for (const auto& hit : _event->GetHits()) {
     auto wf = hit->GetADCvector();
+    if (wf.size() == 0) {
+        continue;
+    }
     auto max = std::max_element(wf.cbegin(), wf.cend());
     if (*max == 0)
     {
@@ -325,7 +328,7 @@ void EventDisplay::DoDraw() {
 
   if (_clicked)
     DrawWF();
-
+  std::cout << "Done here" << std::endl;
 }
 
 //******************************************************************************

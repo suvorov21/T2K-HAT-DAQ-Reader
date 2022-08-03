@@ -420,49 +420,73 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
     }
 //    std::cout << "-> Number of waveforms: " << waveformsNumber << std::endl;
 
+    /// Common to both versions
+    auto bank_wave = midas_event->FindBank("WAVE");
+    auto bank_nadc = midas_event->FindBank("NADC");
+
     unsigned short version = 0;
     /// version 1
     auto bank_femc = midas_event->FindBank("FEMC");
     auto bank_chip = midas_event->FindBank("CHIP");
     auto bank_chan = midas_event->FindBank("CHAN");
-    auto bank_nadc = midas_event->FindBank("NADC");
     auto bank_tbin = midas_event->FindBank("TBIN");
-    auto bank_wave = midas_event->FindBank("WAVE");
     if (bank_femc){
         version = 1;
+        std::cout << "Using version 1" << std::endl;
     }
-
     /// version 2
     auto bank_chid = midas_event->FindBank("CHID");
     auto bank_tmin = midas_event->FindBank("TMIN");
     auto bank_tmax = midas_event->FindBank("TMAX");
     if (bank_chid and version == 0) {
         version = 2;
+        std::cout << "Using version 2" << std::endl;
     }
 
-//    std::cout << "-> Data format version: " << version << std::endl;
-
-    event->Reserve(waveformsNumber);
+//    event->Reserve(waveformsNumber);
     TRawHit* hit;
-    auto femc_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_femc), waveformsNumber);
-    auto chip_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chip), waveformsNumber);
-    auto chan_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chan), waveformsNumber);
-    auto nadc_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_nadc), waveformsNumber);
-    auto tbin_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_tbin), waveformsNumber);
-    auto wave_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_wave), waveformsNumber);
+
+    std::vector<unsigned short> femc_vector, chip_vector, chan_vector, chid_vector, nadc_vector, tbin_vector, tmin_vector, wave_vector;
+
+    nadc_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_nadc), waveformsNumber);
+    unsigned int total_size_wave = 0;
+    for (unsigned int i =0; i < waveformsNumber; i++) total_size_wave+=nadc_vector[i];
+    std::cout <<"Total number of ADC counts: " << total_size_wave << std::endl;
+    std::cout <<"Number waves: " << waveformsNumber << std::endl;
+    wave_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_wave), total_size_wave);
+
+    std::cout << "here" << std::endl;
+    if (version == 1){
+        femc_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_femc), waveformsNumber);
+        chip_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chip), waveformsNumber);
+        chan_vector = GetUCharVectorFromBank(midas_event->GetBankData(bank_chan), waveformsNumber);
+        tbin_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_tbin), waveformsNumber);
+    }
+    else if (version == 2) {
+        chid_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_chid), waveformsNumber);
+        tmin_vector = GetUShortVectorFromBank(midas_event->GetBankData(bank_tmin), waveformsNumber); // we use the number of adc instead of the tmax
+        femc_vector.resize(waveformsNumber);
+        chip_vector.resize(waveformsNumber);
+        chan_vector.resize(waveformsNumber);
+        for (unsigned int i = 0; i < waveformsNumber; i++) {
+            femc_vector[i] = ExtractFemCard(chid_vector[i]);
+            chip_vector[i] = ExtractChipId(chid_vector[i]);
+            chan_vector[i] = ExtractChanId(chid_vector[i]);
+        }
+    }
+    else {
+        std::cerr << "Version " << version << " not implemented!";
+        exit(1);
+    }
     unsigned int wave_counter = 0;
     for (int i =0; i < waveformsNumber; i++) {
+
+        if (chan_vector[i] == 15 or chan_vector[i] == 28 or chan_vector[i] == 53 or chan_vector[i] == 66 or chan_vector[i] <= 2 or chan_vector[i] >= 79)
+        {
+            std::cout << "Cannot process this channel: " << chan_vector[i] << std::endl;
+            continue;
+        }
         if (version == 1){
-//            std::cout << "Version 1" << std::endl;
-            if (chan_vector[i] == 15 or chan_vector[i] == 28 or chan_vector[i] == 53 or chan_vector[i] == 66 or chan_vector[i] <= 2 or chan_vector[i] >= 79)
-            {
-              std::cout << "Cannot process this channel: " << chan_vector[i] << std::endl;
-              continue;
-            }
-//            auto femc = static_cast<unsigned int>(midas_event->GetBankData(bank_femc)[i]);
-//            auto chip = static_cast<unsigned int>(midas_event->GetBankData(bank_chip)[i]);
-//            auto chan = static_cast<unsigned int>(midas_event->GetBankData(bank_chan)[i]);
-//            std::cout << "--> " << femc_vector[i] << "\t" << chip_vector[i] << "\t" << chan_vector[i] << std::endl;
             hit = new TRawHit(femc_vector[i], chip_vector[i], chan_vector[i]);
             std::vector<unsigned int> adc_vector;
             adc_vector.resize(540);
@@ -472,10 +496,22 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
                 hit->SetADCunit(tbin_vector[jtbin], wave_vector[jtbin]);
             }
         }
+        else if (version == 2){
+            unsigned int counter_adc = 0;
+            std::cout << femc_vector[i] << "\t" << chip_vector[i] << "\t" << chan_vector[i] << std::endl;
+            hit = new TRawHit(femc_vector[i], chip_vector[i], chan_vector[i]);
+            std::vector<unsigned int> adc_vector;
+            adc_vector.resize(540);
+            adc_vector.clear();
+            hit->ResetWF();
+            for (int jtbin = 0; jtbin < nadc_vector[i]; jtbin++){
+                std::cout << tmin_vector[i]+jtbin << "\t" << wave_vector[counter_adc+jtbin] << std::endl;
+                hit->SetADCunit(tmin_vector[i]+jtbin, wave_vector[counter_adc+jtbin]);
+            }
+            counter_adc+= nadc_vector[i];
+        }
         hit->ShrinkWF();
         event->AddHit(hit);
-//        auto chip = static_cast<unsigned int>(midas_event->GetBankData(bankChip)[i]);
-//        auto chan = static_cast<unsigned int>(midas_event->GetBankData(bankChan)[i]);
     }
     return event;
 
@@ -560,6 +596,32 @@ std::vector<unsigned short> InterfaceMidas::GetUShortVectorFromBank(char * data,
                                      ((unsigned char)data[2*i] << 0));
     }
     return vector;
+}
+
+unsigned short InterfaceMidas::ExtractFemCard(unsigned short data) {
+    auto bits = std::bitset<16>(data);
+    return (unsigned short) ((bits.test(11) << 0) +
+                             (bits.test(12) << 1) +
+                             (bits.test(13) << 2));
+}
+
+unsigned short InterfaceMidas::ExtractChipId(unsigned short data) {
+    auto bits = std::bitset<16>(data);
+    return (unsigned short) ((bits.test(7) << 0) +
+                             (bits.test(8) << 1) +
+                             (bits.test(9) << 2) +
+                             (bits.test(10) << 3));
+}
+
+unsigned short InterfaceMidas::ExtractChanId(unsigned short data) {
+    auto bits = std::bitset<16>(data);
+    return (unsigned short) ((bits.test(0) << 0) +
+                             (bits.test(1) << 1) +
+                             (bits.test(2) << 2) +
+                             (bits.test(3) << 3) +
+                             (bits.test(4) << 4) +
+                             (bits.test(5) << 5) +
+                             (bits.test(6) << 6));
 }
 
 std::vector<unsigned short> InterfaceMidas::GetUCharVectorFromBank(char * data, unsigned int nvalues) {
