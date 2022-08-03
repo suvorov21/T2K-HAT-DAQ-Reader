@@ -479,6 +479,7 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
         exit(1);
     }
     unsigned int wave_counter = 0;
+    unsigned int counter_adc = 0;
     for (int i =0; i < waveformsNumber; i++) {
 
         if (chan_vector[i] == 15 or chan_vector[i] == 28 or chan_vector[i] == 53 or chan_vector[i] == 66 or chan_vector[i] <= 2 or chan_vector[i] >= 79)
@@ -497,7 +498,6 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
             }
         }
         else if (version == 2){
-            unsigned int counter_adc = 0;
             std::cout << femc_vector[i] << "\t" << chip_vector[i] << "\t" << chan_vector[i] << std::endl;
             hit = new TRawHit(femc_vector[i], chip_vector[i], chan_vector[i]);
             std::vector<unsigned int> adc_vector;
@@ -505,7 +505,7 @@ TRawEvent* InterfaceMidas::GetEvent(long id) {
             adc_vector.clear();
             hit->ResetWF();
             for (int jtbin = 0; jtbin < nadc_vector[i]; jtbin++){
-                std::cout << tmin_vector[i]+jtbin << "\t" << wave_vector[counter_adc+jtbin] << std::endl;
+                //std::cout << counter_adc+jtbin << "\t" << tmin_vector[i]+jtbin << "\t" << wave_vector[counter_adc+jtbin] << std::endl;
                 hit->SetADCunit(tmin_vector[i]+jtbin, wave_vector[counter_adc+jtbin]);
             }
             counter_adc+= nadc_vector[i];
