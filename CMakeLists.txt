@@ -29,12 +29,12 @@ list(APPEND CMAKE_MODULE_PATH
         ${PROJECT_SOURCE_DIR}/external/hat_event/cmake)
 include(PackageBuilder)
 
-MESSAGE(STATUS ${CMAKE_MODULE_PATH})
-
-
 pbuilder_prepare_project()
 
 set(CMAKE_CXX_STANDARD 14) # Enable c++14 standard
+
+
+option( ENABLE_MIDASIO "Link the midasio libs to the project." ON )
 
 ######
 # ROOT
@@ -58,6 +58,8 @@ LIST(APPEND PUBLIC_EXT_LIBS ${ROOT_LIBRARIES})
 
 pbuilder_add_submodule(hat_event ${PROJECT_SOURCE_DIR}/external/hat_event)
 
+pbuilder_add_submodule(midasio ${PROJECT_SOURCE_DIR}/external/midasio)
+
 #########
 # sources
 #########
@@ -68,6 +70,7 @@ include_directories (
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/external/hat_event
     ${PROJECT_SOURCE_DIR}/external/hat_event/src/
+    ${PROJECT_SOURCE_DIR}/external/midasio
     ${PROJECT_SOURCE_DIR}/external/cli_parser/include
 )
 
@@ -79,3 +82,7 @@ pbuilder_do_package_config()
 
 configure_file(this_daq.sh.in this_daq.sh)
 pbuilder_install_files(${BIN_INSTALL_DIR} ${CMAKE_CURRENT_BINARY_DIR}/this_daq.sh)
+
+add_custom_target(install_${PROJECT_NAME}
+        "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
+        COMMENT "Installing ${PROJECT_NAME}")

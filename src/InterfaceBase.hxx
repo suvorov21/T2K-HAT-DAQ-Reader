@@ -13,6 +13,7 @@
 #include "Mapping.h"
 #include "DAQ.h"
 #include "TRawEvent.hxx"
+#include "midasio.h"
 
 static int tmp = -1;
 
@@ -41,55 +42,6 @@ class InterfaceBase {
     /// verbosity level
     int _verbose;
     bool _has_tracker{false};
-};
-
-/// AQS file reader
-class InterfaceAQS : public InterfaceBase {
- public:
-    explicit InterfaceAQS() = default;;
-    ~InterfaceAQS() override = default;
-    bool Initialise(const std::string &file_name, int verbose) override;
-    uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
-    TRawEvent *GetEvent(long int id) override;
-    void GetTrackerEvent(long int id, Float_t pos[8]) override {
-        throw std::logic_error("No tracker info in AQS");
-    }
-
- private:
-    Features _fea;
-    std::vector<std::pair<long int, int> > _eventPos;
-    __int64 lastRead;
-    DatumContext _dc;
-    FILE* _fsrc{nullptr};
-    int _sample_index_offset_zs;
-    DAQ _daq;
-    Mapping _t2k;
-
-    int _firstEv;
-};
-
-/// ROOT file reader
-class InterfaceROOT : public InterfaceBase {
- public:
-    InterfaceROOT() {}
-    ~InterfaceROOT() override = default;
-    bool Initialise(const std::string &file_name, int verbose) override;
-    uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
-    TRawEvent *GetEvent(long int id) override;
-    void GetTrackerEvent(long int id, Float_t *pos) override;
-
- private:
-    TFile *_file_in;
-    TTree *_tree_in;
-    int _padAmpl[geom::nPadx][geom::nPady][n::samples];
-    int _padAmpl_511[geom::nPadx][geom::nPady][511];
-    bool _use511;
-    int _time_mid;
-    int _time_msb;
-    int _time_lsb;
-
-    Float_t _pos[8];
-    Mapping _t2k;
 };
 
 class InterfaceRawEvent : public InterfaceBase {
@@ -131,30 +83,6 @@ class InterfaceTracker : public InterfaceBase {
  private:
     ifstream _file;
     std::map<long int, int> _eventPos;
-};
-
-/// Factory returns proper input interface
-class InterfaceFactory {
- public:
-    static std::shared_ptr<InterfaceBase> get(const TString &file_name) {
-        if (file_name.EndsWith(".aqs")) {
-            return std::make_shared<InterfaceAQS>();
-        }
-
-        if (file_name.EndsWith(".root")) {
-            TFile file(file_name);
-            if (file.Get<TTree>("EventTree")) {
-                return std::make_shared<InterfaceRawEvent>();
-            } else if (file.Get<TTree>("tree")) {
-                return std::make_shared<InterfaceROOT>();
-            } else {
-                std::cerr << "ERROR in converter. Unknown ROOT file type." << std::endl;
-            }
-        };
-
-        std::cerr << "ERROR in converter. Unknown file type." << std::endl;
-        return nullptr;
-    }
 };
 
 #endif

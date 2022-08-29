@@ -16,7 +16,11 @@ set (CORE_DICT_HEADERFILES
     Mapping.h
     EventDisplay.hxx
     platform_spec.h
-    Interface.hxx
+    InterfaceBase.hxx
+    InterfaceRoot.hxx
+    InterfaceFactory.hxx
+    InterfaceMidas.hxx
+    InterfaceAqs.hxx
     Output.hxx
     SetT2KStyle.hxx
 )
@@ -28,12 +32,19 @@ set (CORE_SOURCEFILES
     Mapping.cxx
     EventDisplay.cxx
     platform_spec.h
-    Interface.cxx
+    InterfaceBase.cxx
+    InterfaceRoot.cxx
+    InterfaceMidas.cxx
+    InterfaceAqs.cxx
     Output.cxx
 )
 
 # If there were other libraries in this package on which this library depends, then they would be put in this variable
 set(PACKAGE_LIBS TRawEvent_daq_reader)
+
+if(ENABLE_MIDASIO)
+    LIST(APPEND PACKAGE_LIBS midasio_daq_reader)
+endif(ENABLE_MIDASIO)
 
 set( CORE_LINKDEF_HEADERFILE LinkDef/CCoreLinkDef.h )
 set( CORE_SOURCEFILES ${CORE_SOURCEFILES} ${CMAKE_CURRENT_BINARY_DIR}/CCoreDict.cxx )
@@ -50,10 +61,6 @@ pbuilder_install_files(${LIB_INSTALL_DIR} ${CORE_DICT_PCMFILE})
 # ###########
 # # Library #
 # ###########
-message("here")
-message("${PUBLIC_EXT_LIBS}")
-message("${PRIVATE_EXT_LIBS}")
-message("${PACKAGE_LIBS}")
 
 pbuilder_library(
         TARGET TCore
