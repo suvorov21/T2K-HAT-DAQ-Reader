@@ -16,7 +16,11 @@ set (CORE_DICT_HEADERFILES
     Mapping.h
     EventDisplay.hxx
     platform_spec.h
-    Interface.hxx
+    InterfaceBase.hxx
+    InterfaceRoot.hxx
+    InterfaceFactory.hxx
+    InterfaceMidas.hxx
+    InterfaceAqs.hxx
     Output.hxx
     SetT2KStyle.hxx
 )
@@ -28,7 +32,10 @@ set (CORE_SOURCEFILES
     Mapping.cxx
     EventDisplay.cxx
     platform_spec.h
-    Interface.cxx
+    InterfaceBase.cxx
+    InterfaceRoot.cxx
+    InterfaceMidas.cxx
+    InterfaceAqs.cxx
     Output.cxx
 )
 

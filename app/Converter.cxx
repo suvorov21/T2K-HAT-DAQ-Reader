@@ -1,4 +1,4 @@
-#include "Interface.hxx"
+#include "InterfaceFactory.hxx"
 #include "Output.hxx"
 
 #include <iostream>

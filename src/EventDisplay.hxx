@@ -26,7 +26,7 @@
 #include <TRootEmbeddedCanvas.h>
 #include "TH1F.h"
 #include "TH2F.h"
-#include "Interface.hxx"
+#include "InterfaceFactory.hxx"
 #include "TThread.h"
 #include "TGraphErrors.h"
 

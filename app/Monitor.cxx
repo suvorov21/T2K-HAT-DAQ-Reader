@@ -1,9 +1,5 @@
 #include "EventDisplay.hxx"
-#include "fdecoder.h"
-#include "datum_decoder.h"
 #include "platform_spec.h"
-#include "frame.h"
-#include "Interface.hxx"
 
 void help()
 {
