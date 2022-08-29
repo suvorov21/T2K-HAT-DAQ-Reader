@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <iostream>
 #include <sstream>
-#include <bitset>
 
 #include <midasio.h>
 

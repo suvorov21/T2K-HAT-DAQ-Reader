@@ -2,6 +2,8 @@
 // Created by SERGEY SUVOROV on 29/08/2022.
 //
 
+#include <bitset>
+
 #include "InterfaceMidas.hxx"
 
 //******************************************************************************
