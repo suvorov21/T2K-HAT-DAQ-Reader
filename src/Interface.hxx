@@ -117,7 +117,7 @@ public:
     ~InterfaceMidas() override = default;
     bool Initialise(const std::string &file_name, int verbose) override;
     uint64_t Scan(int start, bool refresh, int &Nevents_run) override;
-    TRawEvent *GetEvent(long int id);
+    TRawEvent *GetEvent(long int id) override;
     void GetTrackerEvent(long int id, Float_t pos[8]) override {
         throw std::logic_error("No tracker info in TRawEvent");
     }
