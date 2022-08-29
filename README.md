@@ -8,6 +8,7 @@ The supported inputs formats are:
 1. AQS
 2. ROOT file with 3D array: `[32][36][511]`
 3. ROOT file with TRawEvent. The class is defined in [hat_event](https://gitlab.com/t2k-beamtest/hat_event) package.
+4. Midas `.mid.lz4` format
 
 ### Output:
 Supported output formats
@@ -58,11 +59,14 @@ The routine can be automated with python script
 python3 ./script/converter.py -e build/app/Converter -i /input_dir/aqs -o /output/ROOT/
 ```
 
-WARNING! The converter does NOT allow output file overwriting, in order to prevent data loss. If there are old file, please, delete them manually or choose a different output location.
+WARNING! The converter does NOT allow output file overwriting, in order to 
+prevent data loss. If there are old files, please, delete them manually 
+or choose a different output location.
 
 ## EventMonitor
 
-The event monitor could run over both AQS and ROOT files. The interface will be chosen automatically.
+The event monitor could run over any of the input file formats. 
+The interface will be chosen automatically.
 
 ```bash
 ./app/Monitor -i ~/DATA/R2021_06_10-16_30_21-000.aqs
@@ -70,4 +74,5 @@ The event monitor could run over both AQS and ROOT files. The interface will be 
 
 ![](resources/EventDisplay.png)
 
-The verbosity could be done with `-v1` flag. So far two level of verbosity are available.
+The verbosity could be done with `-v1` flag. 
+So far two level of verbosity are available.
