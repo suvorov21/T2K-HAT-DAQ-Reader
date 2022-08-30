@@ -11,7 +11,7 @@ void help()
 }
 
 int main(int argc, char **argv) {
-   std::string name = "";
+   std::string name;
    int verbose = 0;
    for (;;) {
     int c = getopt(argc, argv, "i:v:");
@@ -20,10 +20,10 @@ int main(int argc, char **argv) {
       case 'i' :name          = optarg;       break;
       case 'v' :verbose       = atoi(optarg); break;
 
-      case '?' : help();
+      default : help();
     }
   }
-  if (argc == 1 || name == "")
+  if (argc == 1 || name.empty())
     help();
 
    TApplication theApp("App", &argc,argv);
