@@ -59,7 +59,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
       std::cerr << "Interface initialisation fails. Exit" << std::endl;
       exit(1);
   }
-  Nevents = _interface->Scan(-1, true, tmp);
+  Nevents = _interface->Scan(-1, true, _nEvents_run);
 
   if (Nevents == 0) {
     std::cerr << "Empty file!" << std::endl;
@@ -67,106 +67,148 @@ EventDisplay::EventDisplay(const TGWindow *p,
   }
   else
   {
-    std::cout << "Found " << Nevents << "events" << std::endl;
+    std::cout << "Found " << Nevents << " events in file" << std::endl;
   }
 
-  // ini GUI
-  auto* fMain = new TGHorizontalFrame(this, w, h);
-  fED = new TRootEmbeddedCanvas("glec1", fMain, 700, 500);
-  fWF = new TRootEmbeddedCanvas("glec2", fMain, 700, 500);
+  auto *fMain = new TGVerticalFrame(this, w, h);
 
-  fMain->AddFrame(fED, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-  fMain->AddFrame(fWF, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-  auto *hfrm = new TGHorizontalFrame(this, 10, 10);
+  // ####################################
+  // Navigation
+  // ####################################
+  auto *navGroup = new TGGroupFrame(this, "Navigation", kVerticalFrame);
 
-  f_WF_canvas = fWF->GetCanvas();
-  f_WF_canvas->Clear();
-  f_WF_canvas->Divide(3, 3);
-
-  AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-
-  // Exit
-  fButtonExit = new TGTextButton(hfrm, "        &Exit...        ", 3);
-  fButtonExit->Connect("Clicked()" , "TApplication", gApplication, "Terminate()");
-  hfrm->AddFrame(fButtonExit, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                                10, 10, 10, 10));
-
-  // next event
-  fNextEvent = new TGTextButton(hfrm, "        &Next        ", 3);
-  fNextEvent->Connect("Clicked()" , "EventDisplay", this, "NextEvent()");
-  hfrm->AddFrame(fNextEvent, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                               10, 10, 10, 10));
+  // ****************************
+  // Back - next line
+  auto backNextFrame = new TGHorizontalFrame(this);
 
   // previous event
-  fPrevEvent = new TGTextButton(hfrm, "        &Previous        ", 3);
-  fPrevEvent->Connect("Clicked()" , "EventDisplay", this, "PrevEvent()");
-  hfrm->AddFrame(fPrevEvent, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                               10, 10, 10, 10));
+  fPrevEvent = new TGTextButton(backNextFrame, "  & < Back ", 3);
+  fPrevEvent->Connect("Clicked()", "EventDisplay", this, "PrevEvent()");
+  backNextFrame->AddFrame(fPrevEvent, new TGLayoutHints(kLHintsLeft,
+                                                        5, 0, 10, 0));
+
+  // next event
+  fNextEvent = new TGTextButton(backNextFrame, "  &Next > ", 3);
+  fNextEvent->Connect("Clicked()", "EventDisplay", this, "NextEvent()");
+  backNextFrame->AddFrame(fNextEvent, new TGLayoutHints(kLHintsLeft,
+                                                        5, 0, 10, 0));
+
+  navGroup->AddFrame(backNextFrame, new TGLayoutHints(kLHintsLeft,
+                                                      5, 0, 10, 0));
+
+  // ****************************
+  // GoTo frame
+  auto *goToFrame = new TGHorizontalFrame(this);
+
+  // event number display
+  fNumber = new TGNumberEntry(goToFrame, 1, 10, 999, TGNumberFormat::kNESInteger,
+                              TGNumberFormat::kNEANonNegative,
+                              TGNumberFormat::kNELLimitMinMax,
+                              0, 99999);
+
+  goToFrame->AddFrame(fNumber, new TGLayoutHints(kLHintsLeft,
+                                                 5, 0, 0, 0));
 
   // do draw
-  fButtonDraw = new TGTextButton(hfrm, "        &Draw        ", 3);
-  fButtonDraw->Connect("Clicked()" , "EventDisplay", this, "UpdateNumber()");
-  hfrm->AddFrame(fButtonDraw, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                                10, 10, 10, 10));
+  fButtonDraw = new TGTextButton(goToFrame, "  &Draw ", 3);
+  fButtonDraw->Connect("Clicked()", "EventDisplay", this, "UpdateNumber()");
+  goToFrame->AddFrame(fButtonDraw, new TGLayoutHints(kLHintsLeft,
+                                                     5, 0, 0, 0));
 
-  // start monitoring
-  fStartMon = new TGTextButton(hfrm, "        &Start monitoring        ", 3);
-  fStartMon->Connect("Clicked()" , "EventDisplay", this, "StartMonitoring()");
-  hfrm->AddFrame(fStartMon, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  navGroup->AddFrame(goToFrame, new TGLayoutHints(kLHintsLeft,
+                                                  5, 0, 10, 0));
 
-  fNumber = new TGNumberEntry(hfrm, 1, 15,999, TGNumberFormat::kNESInteger,
-                              TGNumberFormat::kNEANonNegative,
-                              TGNumberFormat::kNELLimitMinMax,
-                              0, 99999);
+  // ****************************
+  // Look through 50
+  fLookThrough = new TGTextButton(navGroup, "  &Look through 50 ", 3);
+  fLookThrough->Connect("Clicked()", "EventDisplay", this, "LookThroughClick()");
+  navGroup->AddFrame(fLookThrough, new TGLayoutHints(kLHintsLeft,
+                                                     0, 0, 0, 0));
 
-  hfrm->AddFrame(fNumber, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+  // Monitoring
+  fStartMon = new TGTextButton(navGroup, "  &Start monitoring ", 3);
+  fStartMon->Connect("Clicked()", "EventDisplay", this, "StartMonitoring()");
+  navGroup->AddFrame(fStartMon, new TGLayoutHints(kLHintsLeft,
+                                                  0, 0, 10, 0));
 
-  // look through the events
-  fLookThrough = new TGTextButton(hfrm, "        &Look through 50       ", 3);
-  fLookThrough->Connect("Clicked()" , "EventDisplay", this, "LookThroughClick()");
-  hfrm->AddFrame(fLookThrough, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  fMain->AddFrame(navGroup, new TGLayoutHints(kLHintsLeft,
+                                              10, 0, 10, 0));
 
-  // shange the palette to Paul's favourite
-  fTimeMode = new TGTextButton(hfrm, "        &Time Mode       ", 3);
+  // ####################################
+  // Canvas control
+  // ####################################
+  auto *windowGroup = new TGGroupFrame(this, "Canvases", kVerticalFrame);
+  // Show time along Z axis
+  fTimeMode = new TGTextButton(windowGroup, " &Time Mode  ", 3);
   fTimeMode->Connect("Clicked()" , "EventDisplay", this, "TimeModeClick()");
-  hfrm->AddFrame(fTimeMode, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  windowGroup->AddFrame(fTimeMode, new TGLayoutHints(kLHintsLeft,
+                                                     5, 0, 10, 0));
 
-  // shange the palette to Paul's favourite
-  fPallete = new TGTextButton(hfrm, "        &Paul's button       ", 3);
-  fPallete->Connect("Clicked()" , "EventDisplay", this, "PaletteClick()");
-  hfrm->AddFrame(fPallete, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
-  // fGoToEnd = new TGTextButton(hfrm, "        &Go to file end        ", 3);
-  // fGoToEnd->Connect("Clicked()" , "EventDisplay", this, "GoToEnd()");
-  // hfrm->AddFrame(fGoToEnd, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-  //                                             10, 10, 10, 10));
+  // Show Z-X view
+  fzxView = new TGTextButton(windowGroup, " &Z-X view  ", 3);
+  fzxView->Connect("Clicked()" , "EventDisplay", this, "ZxModeClick()");
+  windowGroup->AddFrame(fzxView, new TGLayoutHints(kLHintsLeft,
+                                                   5, 0, 10, 0));
 
-  fWF_range = new TGTextButton(hfrm, "        &Apply       ", 3);
-  fWF_range->Connect("Clicked()" , "EventDisplay", this, "ChangeWFrange()");
-  hfrm->AddFrame(fWF_range, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  // Show Z-Y view
+  fzyView = new TGTextButton(windowGroup, " &Z-Y view  ", 3);
+  fzyView->Connect("Clicked()", "EventDisplay", this, "ZyModeClick()");
+  windowGroup->AddFrame(fzyView, new TGLayoutHints(kLHintsLeft,
+                                                   5, 0, 10, 0));
 
-  fWF_end = new TGNumberEntry(hfrm, 500, 15,999, TGNumberFormat::kNESInteger,
-                              TGNumberFormat::kNEANonNegative,
-                              TGNumberFormat::kNELLimitMinMax,
-                              0, 99999);
-  hfrm->AddFrame(fWF_end, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+  // Show charge accumulation
+  fQaccumMode = new TGTextButton(windowGroup, " &Charge accumulation  ", 3);
+  fQaccumMode->Connect("Clicked()" , "EventDisplay", this, "ChargeAccumClicked()");
+  windowGroup->AddFrame(fQaccumMode, new TGLayoutHints(kLHintsLeft,
+                                                     5, 0, 10, 0));
 
-  fWF_start = new TGNumberEntry(hfrm, 0, 15,999, TGNumberFormat::kNESInteger,
-                              TGNumberFormat::kNEANonNegative,
-                              TGNumberFormat::kNELLimitMinMax,
-                              0, 99999);
-  hfrm->AddFrame(fWF_start, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+  // Show time accumulation
+  fTaccumMode = new TGTextButton(windowGroup, " &Time accumulation  ", 3);
+  fTaccumMode->Connect("Clicked()" , "EventDisplay", this, "TimeAccumClicked()");
+  windowGroup->AddFrame(fTaccumMode, new TGLayoutHints(kLHintsLeft,
+                                                       5, 0, 10, 0));
 
-  fLabel = new TGLabel(hfrm, "WF range");
-  hfrm->AddFrame(fLabel, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
-                                              10, 10, 10, 10));
+  // WF explorer
+  fWfExplorer = new TGTextButton(windowGroup, " &WF explorer  ", 3);
+  fWfExplorer->Connect("Clicked()" , "EventDisplay", this, "WfExplorerClicked()");
+  windowGroup->AddFrame(fWfExplorer, new TGLayoutHints(kLHintsLeft,
+                                                       5, 0, 10, 0));
 
+  fMain->AddFrame(windowGroup, new TGLayoutHints(kLHintsLeft,
+                                                 10, 0, 10, 0));
 
-  AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
+  // ####################################
+  // Exit
+  // ####################################
+  fButtonExit = new TGTextButton(fMain, "  &Exit... ", 3);
+  fButtonExit->Connect("Clicked()", "TApplication", gApplication, "Terminate()");
+  fMain->AddFrame(fButtonExit, new TGLayoutHints(kLHintsCenterX,
+                                                0, 0, 10, 10));
+
+  AddFrame(fMain);
+//  fWF_range = new TGTextButton(hfrm, "        &Apply       ", 3);
+//  fWF_range->Connect("Clicked()" , "EventDisplay", this, "ChangeWFrange()");
+//  hfrm->AddFrame(fWF_range, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+//                                              10, 10, 10, 10));
+//
+//  fWF_end = new TGNumberEntry(hfrm, 500, 15,999, TGNumberFormat::kNESInteger,
+//                              TGNumberFormat::kNEANonNegative,
+//                              TGNumberFormat::kNELLimitMinMax,
+//                              0, 99999);
+//  hfrm->AddFrame(fWF_end, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+//
+//  fWF_start = new TGNumberEntry(hfrm, 0, 15,999, TGNumberFormat::kNESInteger,
+//                              TGNumberFormat::kNEANonNegative,
+//                              TGNumberFormat::kNELLimitMinMax,
+//                              0, 99999);
+//  hfrm->AddFrame(fWF_start, new TGLayoutHints(kLHintsBottom | kLHintsRight, 10, 10, 10, 10));
+//
+//  fLabel = new TGLabel(hfrm, "WF range");
+//  hfrm->AddFrame(fLabel, new TGLayoutHints(kLHintsCenterX | kLHintsRight,
+//                                              10, 10, 10, 10));
+//
+//
+//  AddFrame(hfrm, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
 
   // What to clean up in destructor
   SetCleanup(kDeepCleanup);
@@ -177,33 +219,45 @@ EventDisplay::EventDisplay(const TGWindow *p,
   Resize(GetDefaultSize());
   MapWindow();
 
+  // monitoring thread setup
   fMonitoringThread = new TThread("monitoring", Monitoring, (void *)this);
   fLookThread = new TThread("lookthrough", LookThrough, (void *)this);
 
-  _total_canv = new TCanvas("Accumulation", "Accumulation", 800, 800, 700, 400);
-  _total_canv->Divide(2);
-  _accum_time = new TH1F("time", "Time", 511, 0., 511.);
-  _accum_ed = new TH2F("accum_ed", "Accumulation", 38, -1., 37., 34, -1., 33.);
-  _total_canv->cd(1);
-  _accum_ed->Draw("colz");
-  _total_canv->cd(2);
-  _accum_time->Draw();
-  _total_canv->Update();
+  // Accumulation charge
+  for (auto i = 0; i < 8; ++i) {
+    _mmCharge[i] = new TH2F(Form("MMcharge_%i", i), Form("Charge accumulation MM %i", i), 38, -1., 37., 34, -1., 33.);
+  }
 
-  _mmm_canvas = new TCanvas("Multiple MM", "Multiple MM", 1000, 600);
+  // Accumulation time
+  for (auto i = 0; i < 8; ++i) {
+    _mmTime[i] = new TH1F(Form("MMtime_%i", i), Form("Time accumulation MM %i", i), 511, 0., 511.);
+  }
+
+  // ZX charge
+  for (auto i = 0; i < 8; ++i) {
+    zsMm[i] = new TH2F(Form("MMzx_%i", i), Form("ZX MM %i", i), 511, 0., 511., 38, -1., 37.);
+  }
+
+  // ZY time
+  for (auto i = 0; i < 8; ++i) {
+    zyMm[i] = new TH2F(Form("MMzy_%i", i), Form("ZY MM %i", i), 511, 0., 511., 34, -1., 33.);
+  }
+
+  // canvas for 8 MM view
+  _mmm_canvas = new TCanvas("Multiple MM", "Multiple MM view", 300, 100, 1000, 600);
   _mmm_canvas->Divide(4, 2);
   for (auto i = 0; i < 8; ++i) {
     _mmm_canvas->cd(i + 1);
-    _mm[i] = new TH2F(Form("MM_%i", i), Form("MM_%i", i), 38, -1., 37., 34, -1., 33.);;
+    _mm[i] = new TH2F(Form("MM_%i", i), Form("MM %i", i), 38, -1., 37., 34, -1., 33.);;
     _mm[i]->Draw("colz");
   }
 
-  _tracker_canv = new TCanvas("Tracker", "Tracker", 0, 800, 400, 400);
-  _tracker_canv->Divide(2, 2);
-  for (auto & tr : _tracker)
-    tr = new TGraphErrors();
-
-  std::cout << std::endl;
+//  _tracker_canv = new TCanvas("Tracker", "Tracker", 0, 800, 400, 400);
+//  _tracker_canv->Divide(2, 2);
+//  for (auto & tr : _tracker)
+//    tr = new TGraphErrors();
+//
+//  std::cout << std::endl;
 };
 
 EventDisplay::~EventDisplay() {
@@ -215,7 +269,7 @@ EventDisplay::~EventDisplay() {
 void EventDisplay::DoExit() {
 //******************************************************************************
   // Close application window.
-  std::cout << "Exiting" << std::endl;
+  std::cout << "Bye!" << std::endl;
   gSystem->Unlink(fName.Data());
   gApplication->Terminate();
 }
@@ -230,21 +284,20 @@ void EventDisplay::DoDraw() {
     fNumber->SetIntNumber(eventID);
     return;
   }
-  // get canvas and connect to monitor
-  f_ED_canvas = fED->GetCanvas();
-  f_ED_canvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","EventDisplay",this, "ClickEventOnGraph(Int_t,Int_t,Int_t,TObject*)");
-
-  bool fill_gloabl = (eventPrev != eventID);
+   bool fill_gloabl = (eventPrev != eventID);
 
   // read event
   // WARNING due to some bug events MAY BE skipped qt the first read
   _event = _interface->GetEvent(eventID);
 
   std::cout << "\rEvent\t" << eventID << " from " << Nevents;
-  std::cout << " in the file (" << _Nevents_run << " in run in total)" << std::flush;
+  std::cout << " in the file (" << _nEvents_run << " in run in total)" << std::flush;
   MM->Reset();
-  for (auto i = 0; i < 8; ++i)
+  for (auto i =  0; i < 8; ++i) {
     _mm[i]->Reset();
+    zsMm[i]->Reset();
+    zyMm[i]->Reset();
+  }
 
   for (const auto& hit : _event->GetHits()) {
     auto wf = hit->GetADCvector();
@@ -264,40 +317,33 @@ void EventDisplay::DoDraw() {
         MM->Fill(x, y, qMax);
       }
     }
-    _mm[hit->GetCard()]->Fill(x, y, qMax);
 
+    zsMm[hit->GetCard()]->Fill(maxt, x, qMax);
+    zyMm[hit->GetCard()]->Fill(maxt, y, qMax);
+
+    if (fIsTimeModeOn) {
+        _mm[hit->GetCard()]->Fill(x, y, maxt);
+    } else {
+        _mm[hit->GetCard()]->Fill(x, y, qMax);
+    };
+
+    // accumulation plots in case event is updated
     if (fill_gloabl) {
-      _accum_ed->Fill(x, y, qMax);
-      _accum_time->Fill(maxt);
       eventPrev = eventID;
+      _mmCharge[hit->GetCard()]->Fill(x, y, qMax);
+      _mmTime[hit->GetCard()]->Fill(maxt);
     }
   }
 
 	double minZ{std::nan("unset")}, maxZ{std::nan("unset")};
 	for(auto& mmHist : _mm){
-		if(minZ != minZ or minZ > mmHist->GetMinimum()) minZ = mmHist->GetMinimum();
-		if(maxZ != maxZ or maxZ < mmHist->GetMaximum()) maxZ = mmHist->GetMaximum();
+		if(minZ != minZ or minZ > mmHist->GetBinContent(mmHist->GetMinimumBin())) minZ = mmHist->GetBinContent(mmHist->GetMinimumBin());
+		if(maxZ != maxZ or maxZ < mmHist->GetBinContent(mmHist->GetMaximumBin())) maxZ = mmHist->GetBinContent(mmHist->GetMaximumBin());
 	}
 	for(auto& mmHist : _mm){ mmHist->GetZaxis()->SetRangeUser(minZ, maxZ); }
 
-  f_ED_canvas->cd();
-  gStyle->SetOptStat(0);
-
-  //gROOT->ForceStyle();
   _t2kstyle->SetPalette(fPaletteMM);
   gROOT->SetStyle(_t2kstyle->GetName());
-  MM->Draw("colz");
-  /** Whether to draw the pad borders */
-  MM->GetXaxis()->SetNdivisions(38);
-  MM->GetXaxis()->SetLabelSize(0.025);
-  MM->GetYaxis()->SetLabelSize(0.025);
-  MM->GetYaxis()->SetNdivisions(36);
-  /** end of block*/
-
-  _t2kstyle->SetPalette(fPaletteMM);
-  gROOT->SetStyle(_t2kstyle->GetName());
-  gPad->SetGrid();
-  f_ED_canvas->Update();
 
   for (auto i = 0; i < 8; ++i) {
     _mmm_canvas->cd(i+1);
@@ -308,31 +354,65 @@ void EventDisplay::DoDraw() {
   auto oldStyle = _rb_palette ? 1 : kBird;
   _t2kstyle->SetPalette(oldStyle);
   gROOT->SetStyle(_t2kstyle->GetName());
-  _total_canv->cd(1);
-  _accum_ed->Draw("colz");
-  _total_canv->cd(2);
-  _accum_time->Draw();
-  _total_canv->Update();
 
-  if (_interface->HasTracker()) {
-    Float_t pos[8];
-    _interface->GetTrackerEvent(eventID, pos);
-    for (auto& tr : _tracker)
-      tr->Set(0);
-
-    for (auto i = 0; i < 4; ++i) {
-      _tracker[i]->Set(0);
-      _tracker[i]->SetPoint(0, pos[i*2], pos[i*2 + 1]);
-      _tracker_canv->cd(i+1);
-      gPad->DrawFrame(0, 0, 10, 10);
-      _tracker[i]->Draw("p");
+  if (_chargeAccum) {
+    for (auto i = 0; i < 8; ++i) {
+      _chargeAccum->cd(i+1);
+      _mmCharge[i]->Draw("colz");
     }
-    _tracker_canv->Update();
+    _chargeAccum->Update();
   }
+
+  if (_timeAccum) {
+    for (auto i = 0; i < 8; ++i) {
+      _timeAccum->cd(i+1);
+      _mmTime[i]->Draw();
+    }
+    _timeAccum->Update();
+  }
+
+  if (zxView) {
+    for (auto i = 0; i < 8; ++i) {
+      zxView->cd(i+1);
+      zsMm[i]->Draw("colz");
+    }
+    zxView->Update();
+  }
+
+  if (zyView) {
+    for (auto i = 0; i < 8; ++i) {
+      zyView->cd(i+1);
+      zyMm[i]->Draw("colz");
+    }
+    zyView->Update();
+  }
+
+  if (f_ED_canvas) {
+    edPad->cd();
+    MM->Draw("colz");
+    edPad->Update();
+  }
+
+//  if (_interface->HasTracker()) {
+//    Float_t pos[8];
+//    _interface->GetTrackerEvent(eventID, pos);
+//    for (auto& tr : _tracker)
+//      tr->Set(0);
+//
+//    for (auto i = 0; i < 4; ++i) {
+//      _tracker[i]->Set(0);
+//      _tracker[i]->SetPoint(0, pos[i*2], pos[i*2 + 1]);
+//      _tracker_canv->cd(i+1);
+//      gPad->DrawFrame(0, 0, 10, 10);
+//      _tracker[i]->Draw("p");
+//    }
+//    _tracker_canv->Update();
+//  }
 
   if (_clicked)
     DrawWF();
-  std::cout << "Done here" << std::endl;
+  if (_verbose > 0)
+    std::cout << "\nDone here" << std::endl;
 }
 
 //******************************************************************************
@@ -341,7 +421,7 @@ void EventDisplay::NextEvent() {
   ++eventID;
   // scan the rest of the file for new events
   if (doMonitoring)
-    Nevents = _interface->Scan(Nevents-1, false, _Nevents_run);
+    Nevents = _interface->Scan(Nevents-1, false, _nEvents_run);
 
   fNumber->SetIntNumber(eventID);
   DoDraw();
@@ -349,8 +429,10 @@ void EventDisplay::NextEvent() {
 
 void EventDisplay::PrevEvent() {
   --eventID;
-  if (eventID < 0)
+  if (eventID < 0) {
+    eventID = 0;
     return;
+  }
   fNumber->SetIntNumber(eventID);
   DoDraw();
 }
@@ -378,84 +460,32 @@ void EventDisplay::ClickEventOnGraph(Int_t event,
                                      TObject *selected
                                      ) {
 //******************************************************************************
-  auto *f_WF_canvas = (TCanvas *)gTQSender;
+
+  auto *f_WF_canvas = (TPad *)gTQSender;
   if (event != 1)
     return;
-  TString s = selected->GetObjectInfo(px,py);
-  Ssiz_t first = 0, last;
 
-  first = s.Index("=", 0);
-  last  = s.Index(",", first);
-
-  if (first == kNPOS || last == kNPOS)
-    return;
-
-  Int_t x = int(TString(s(first+1, last-1)).Atof());
-
-  first = s.Index("=", last);
-  last  = s.Index(",", first);
-
-  if (first == kNPOS)
-    return;
-
-  Int_t y = int(TString(s(first+1, last-1)).Atof());
+  double xd = edPad->AbsPixeltoX(px);
+  double yd = edPad->AbsPixeltoY(py);
+  double x = edPad->PadtoX(xd);
+  double y = edPad->PadtoY(yd);
 
   _x_clicked = x;
   _y_clicked = y;
   _clicked = true;
 
-  f_WF_canvas = fWF->GetCanvas();
-  // f_WF_canvas->Clear();
-  // f_WF_canvas->Divide(3, 3);
+  if (_verbose > 0)
+    std::cout << "\nClick on " << _x_clicked << "\t" << _y_clicked << std::endl;
 
-  for (const auto& hit : _event->GetHits()) {
-    if (x+1 > 35 || x-1 < 0 || y+1 > 31 || y-1 < 0)
-      continue;
-
-    auto x_i = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
-    auto y_i = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
-
-    if (abs(x_i - _x_clicked) > 1 || abs(y_i - _y_clicked) > 1)
-      continue;
-
-    int i = (x_i - _x_clicked + 1) % 3 + (- y_i + _y_clicked + 1) * 3;
-    if (i >= 0 && i < 9) {
-      WF[i]->Reset();
-      for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
-        auto ampl = hit->GetADCvector()[t]-250;
-        WF[i]->SetBinContent(hit->GetTime() + t,  ampl > -249 ? ampl : 0);
-      }
-      f_WF_canvas->cd(i+1);
-      WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
-      WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
-      WF[i]->Draw("hist");
-    }
-  }
-
-  f_WF_canvas->Modified();
-  f_WF_canvas->Update();
-
-  f_ED_canvas = fED->GetCanvas();
-  f_ED_canvas->cd();
-
-  fbox = TBox(x-1, y-1, x+2, y+2);
-  fbox.SetFillStyle(0);
-  fbox.SetLineColor(kRed);
-  fbox.SetLineWidth(3);
-  fbox.Draw();
-
-  _t2kstyle->SetPalette(fPaletteMM);
-  gROOT->SetStyle(_t2kstyle->GetName());
-  f_ED_canvas->Modified();
-  f_ED_canvas->Update();
-
-
+  DrawWF();
 }
 
 //******************************************************************************
 void EventDisplay::DrawWF() {
 //******************************************************************************
-  f_WF_canvas = fWF->GetCanvas();
+  for (auto & i : WF) {
+      i->Reset();
+  }
   for (const auto& hit : _event->GetHits()) {
     if (_x_clicked+1 > 35 || _x_clicked-1 < 0 || _y_clicked+1 > 31 || _y_clicked-1 < 0)
       continue;
@@ -468,24 +498,24 @@ void EventDisplay::DrawWF() {
 
     int i = (x_i - _x_clicked + 1) % 3 + (- y_i + _y_clicked + 1) * 3;
     if (i >= 0 && i < 9) {
-      WF[i]->Reset();
       for (auto t = 0; t < hit->GetADCvector().size(); ++t) {
         auto ampl = hit->GetADCvector()[t]-250;
         WF[i]->SetBinContent(hit->GetTime() + t, ampl > -249 ? ampl : 0);
       }
-      f_WF_canvas->cd(i + 1);
       WF[i]->GetYaxis()->SetRangeUser(fWF_ampl_min, fWF_ampl_max);
       WF[i]->GetXaxis()->SetRangeUser(WFstart, WFend);
-      WF[i]->Draw("hist");
-      f_WF_canvas->Modified();
-      f_WF_canvas->Update();
     }
   }
 
-  f_ED_canvas = fED->GetCanvas();
-  f_ED_canvas->cd();
+  for (auto i = 0; i < 9; ++i) {
+    individualWf[i]->cd();
+    WF[i]->Draw("hist");
+    individualWf[i]->Update();
+  }
 
-  fbox = TBox(_x_clicked-1, _y_clicked-1, _x_clicked+2, _y_clicked+2);
+  edPad->cd();
+
+  fbox = TBox(_x_clicked-1.4, _y_clicked-1.4, _x_clicked+1.6, _y_clicked+1.6);
   fbox.SetFillStyle(0);
   fbox.SetLineColor(kRed);
   fbox.SetLineWidth(3);
@@ -493,8 +523,8 @@ void EventDisplay::DrawWF() {
 
   _t2kstyle->SetPalette(fPaletteMM);
   gROOT->SetStyle(_t2kstyle->GetName());
-  f_ED_canvas->Modified();
-  f_ED_canvas->Update();
+  edPad->Modified();
+  edPad->Update();
 
 }
 
@@ -508,7 +538,8 @@ void EventDisplay::GoToEnd() {
 
 void EventDisplay::TimeModeClick() {
   if (!fIsTimeModeOn){
-    std::cout << "Setting to time mode" << std::endl;
+    if (_verbose > 0)
+      std::cout << "Setting to time mode" << std::endl;
     fPaletteMM = kInvertedDarkBodyRadiator;
     //_t2kstyle->SetPalette(kInvertedDarkBodyRadiator);
     //gROOT->SetStyle(_t2kstyle->GetName());
@@ -516,13 +547,113 @@ void EventDisplay::TimeModeClick() {
     fIsTimeModeOn = true;
   }
   else {
-    std::cout << "Setting to charge mode" << std::endl;
+    if (_verbose > 0)
+        std::cout << "Setting to charge mode" << std::endl;
     fPaletteMM = kBird;
     _t2kstyle->SetPalette(kBird);
     gROOT->SetStyle(_t2kstyle->GetName());
     gROOT->ForceStyle();
     fIsTimeModeOn = false;
   }
+  DoDraw();
+}
+
+void EventDisplay::ZxModeClick() {
+  if (zxView) {
+    delete zxView;
+    zxView = nullptr;
+    return;
+  }
+
+  zxView = new TCanvas("Multiple MM ZX", "Z-X view", 600, 300, 1000, 600);
+  zxView->Divide(4, 2);
+  zxView->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::ZyModeClick() {
+  if (zyView) {
+    delete zyView;
+    zyView = nullptr;
+    return;
+  }
+
+  zyView = new TCanvas("Multiple MM ZY", "Z-Y view", 600, 300, 1000, 600);
+  zyView->Divide(4, 2);
+  zyView->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::ChargeAccumClicked() {
+  if (_chargeAccum) {
+    delete _chargeAccum;
+    _chargeAccum = nullptr;
+    return;
+  }
+
+  _chargeAccum = new TCanvas("Multiple MM charge", "Charge accumulation", 600, 300, 1000, 600);
+  _chargeAccum->Divide(4, 2);
+  _chargeAccum->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::TimeAccumClicked() {
+  if (_timeAccum) {
+    delete _timeAccum;
+    _timeAccum = nullptr;
+    return;
+  }
+
+  _timeAccum = new TCanvas("Multiple MM time", "Time accumulation", 600, 300, 1000, 600);
+  _timeAccum->Divide(4, 2);
+  _timeAccum->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::WfExplorerClicked() {
+  if (f_ED_canvas) {
+    _clicked = false;
+    f_ED_canvas->Disconnect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)");
+    delete f_ED_canvas;
+    f_ED_canvas = nullptr;
+    return;
+  }
+
+  f_ED_canvas = new TCanvas("WF", "WF explorer", 300, 300,1000, 600);
+
+  edPad = new TPad("edPad", "edPad", 0., 0.2, 0.5, 0.80);
+  edPad->Draw();
+  edPad->cd();
+  MM->Draw("colz");
+
+  f_ED_canvas->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                       "EventDisplay",
+                       this,
+                       "ClickEventOnGraph(Int_t,Int_t,Int_t,TObject*)");
+
+
+  f_ED_canvas->cd();
+  wfPad = new TPad("wfPad", "wfPad", 0.5, 0., 1., 1.);
+  wfPad->Draw();
+
+  for (auto i = 0; i < 9; ++i) {
+    wfPad->cd();
+    individualWf[i] = new TPad(Form("pad_%i", i), Form("pad_%i", i),
+                               i % 3 * 0.33,
+                               0.66 - 0.33*(i/3),
+                               i % 3 * 0.33 + 0.33,
+                               0.66 - 0.33*(i/3) + 0.33);
+
+    individualWf[i]->Draw();
+    individualWf[i]->cd();
+    WF[i]->Reset();
+  }
+
+  DoDraw();
 }
 
 
@@ -547,6 +678,7 @@ void EventDisplay::ChangeWFrange() {
 //******************************************************************************
   WFstart = int(fWF_start->GetNumber());
   WFend = int(fWF_end->GetNumber());
+  DoDraw();
 }
 
 //******************************************************************************

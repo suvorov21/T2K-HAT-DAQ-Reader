@@ -41,7 +41,7 @@ bool InterfaceROOT::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
 uint64_t InterfaceROOT::Scan(int start, bool refresh, int& Nevents_run) {
 //******************************************************************************
-    Nevents_run = -1;
+    Nevents_run = _tree_in->GetEntries();
     return _tree_in->GetEntries();
 }
 

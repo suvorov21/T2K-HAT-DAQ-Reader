@@ -29,6 +29,7 @@
 #include "InterfaceFactory.hxx"
 #include "TThread.h"
 #include "TGraphErrors.h"
+#include "TPad.h"
 
 
 class IDList
@@ -59,6 +60,9 @@ private:
 
     // WF plotter params
     TH2F* MM;
+    TPad* edPad;
+    TPad* wfPad;
+    TPad *individualWf[9];
     TH1F* WF[9];
     /// Time bounds for WF plotter
     Int_t WFstart = 0;
@@ -68,11 +72,7 @@ private:
     Int_t fWF_ampl_max = 4000;
 
     // GUI
-    TCanvas *f_ED_canvas;
-    TCanvas *f_WF_canvas;
-    TGHorizontalFrame *fhf;
-    TRootEmbeddedCanvas  *fED;
-    TRootEmbeddedCanvas  *fWF;
+    TCanvas *f_ED_canvas{nullptr};
 
     TGTextButton* fButtonExit;
     TGTextButton* fButtonDraw;
@@ -83,6 +83,11 @@ private:
     TGTextButton* fLookThrough;
     TGTextButton* fPallete;
     TGTextButton* fTimeMode;
+    TGTextButton* fzxView;
+    TGTextButton* fzyView;
+    TGTextButton* fQaccumMode;
+    TGTextButton* fTaccumMode;
+    TGTextButton* fWfExplorer;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
@@ -99,13 +104,20 @@ private:
     bool _rb_palette = false;
 
     /// Accumulation canvas and histoes
-    TCanvas* _total_canv;
-    TH2F* _accum_ed;
-    TH1F* _accum_time;
+    TCanvas* _chargeAccum{nullptr};
+    TH2F* _mmCharge[8];
+    TCanvas* _timeAccum{nullptr};
+    TH1F* _mmTime[8];
 
     /// Multiple Micromegas canvas
     TCanvas* _mmm_canvas;
     TH2F* _mm[8];
+
+    /// different projections
+    TCanvas* zxView{nullptr};
+    TH2F* zsMm[8];
+    TCanvas* zyView{nullptr};
+    TH2F* zyMm[8];
 
     /// Tracker info
     TCanvas* _tracker_canv;
@@ -119,14 +131,14 @@ private:
     /// Thread for constant monitoring
     TThread *fMonitoringThread;
 
-    /// Plot styking
+    /// Plot styling
     TStyle* _t2kstyle;
 
     /// verbosity level
     int _verbose;
 
     /// Number of events in the run
-    int _Nevents_run;
+    int _nEvents_run{0};
 
 public:
     EventDisplay(const TGWindow *p, UInt_t w, UInt_t h, std::string name, int verbose);
@@ -164,6 +176,21 @@ public:
 
     /// Change to Time mode (instead of charge mode)
     void TimeModeClick();
+
+    /// Show Z-X view on the event
+    void ZxModeClick();
+
+    /// Show Zy view over event
+    void ZyModeClick();
+
+    /// Show charge accumulation
+    void ChargeAccumClicked();
+
+    /// Show time accumulation
+    void TimeAccumClicked();
+
+    /// Show WF explorer frame
+    void WfExplorerClicked();
 
     /// Change the WF range
     void ChangeWFrange();
