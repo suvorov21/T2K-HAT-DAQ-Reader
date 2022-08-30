@@ -144,6 +144,18 @@ EventDisplay::EventDisplay(const TGWindow *p,
   windowGroup->AddFrame(fTimeMode, new TGLayoutHints(kLHintsLeft,
                                                      5, 0, 10, 0));
 
+  // Show Z-X view
+  fzxView = new TGTextButton(windowGroup, " &Z-X view  ", 3);
+  fzxView->Connect("Clicked()" , "EventDisplay", this, "ZxModeClick()");
+  windowGroup->AddFrame(fzxView, new TGLayoutHints(kLHintsLeft,
+                                                   5, 0, 10, 0));
+
+  // Show Z-Y view
+  fzyView = new TGTextButton(windowGroup, " &Z-Y view  ", 3);
+  fzyView->Connect("Clicked()", "EventDisplay", this, "ZyModeClick()");
+  windowGroup->AddFrame(fzyView, new TGLayoutHints(kLHintsLeft,
+                                                   5, 0, 10, 0));
+
   // Show charge accumulation
   fQaccumMode = new TGTextButton(windowGroup, " &Charge accumulation  ", 3);
   fQaccumMode->Connect("Clicked()" , "EventDisplay", this, "ChargeAccumClicked()");
@@ -221,6 +233,16 @@ EventDisplay::EventDisplay(const TGWindow *p,
     _mmTime[i] = new TH1F(Form("MMtime_%i", i), Form("Time accumulation MM %i", i), 511, 0., 511.);
   }
 
+  // ZX charge
+  for (auto i = 0; i < 8; ++i) {
+    zsMm[i] = new TH2F(Form("MMzx_%i", i), Form("ZX MM %i", i), 511, 0., 511., 38, -1., 37.);
+  }
+
+  // ZY time
+  for (auto i = 0; i < 8; ++i) {
+    zyMm[i] = new TH2F(Form("MMzy_%i", i), Form("ZY MM %i", i), 511, 0., 511., 34, -1., 33.);
+  }
+
   // canvas for 8 MM view
   _mmm_canvas = new TCanvas("Multiple MM", "Multiple MM view", 300, 100, 1000, 600);
   _mmm_canvas->Divide(4, 2);
@@ -271,8 +293,10 @@ void EventDisplay::DoDraw() {
   std::cout << "\rEvent\t" << eventID << " from " << Nevents;
   std::cout << " in the file (" << _nEvents_run << " in run in total)" << std::flush;
   MM->Reset();
-  for (auto & i : _mm) {
-    i->Reset();
+  for (auto i =  0; i < 8; ++i) {
+    _mm[i]->Reset();
+    zsMm[i]->Reset();
+    zyMm[i]->Reset();
   }
 
   for (const auto& hit : _event->GetHits()) {
@@ -293,6 +317,9 @@ void EventDisplay::DoDraw() {
         MM->Fill(x, y, qMax);
       }
     }
+
+    zsMm[hit->GetCard()]->Fill(maxt, x, qMax);
+    zyMm[hit->GetCard()]->Fill(maxt, y, qMax);
 
     if (fIsTimeModeOn) {
         _mm[hit->GetCard()]->Fill(x, y, maxt);
@@ -342,6 +369,22 @@ void EventDisplay::DoDraw() {
       _mmTime[i]->Draw();
     }
     _timeAccum->Update();
+  }
+
+  if (zxView) {
+    for (auto i = 0; i < 8; ++i) {
+      zxView->cd(i+1);
+      zsMm[i]->Draw("colz");
+    }
+    zxView->Update();
+  }
+
+  if (zyView) {
+    for (auto i = 0; i < 8; ++i) {
+      zyView->cd(i+1);
+      zyMm[i]->Draw("colz");
+    }
+    zyView->Update();
   }
 
   if (f_ED_canvas) {
@@ -512,6 +555,34 @@ void EventDisplay::TimeModeClick() {
     gROOT->ForceStyle();
     fIsTimeModeOn = false;
   }
+  DoDraw();
+}
+
+void EventDisplay::ZxModeClick() {
+  if (zxView) {
+    delete zxView;
+    zxView = nullptr;
+    return;
+  }
+
+  zxView = new TCanvas("Multiple MM ZX", "Z-X view", 600, 300, 1000, 600);
+  zxView->Divide(4, 2);
+  zxView->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::ZyModeClick() {
+  if (zyView) {
+    delete zyView;
+    zyView = nullptr;
+    return;
+  }
+
+  zyView = new TCanvas("Multiple MM ZY", "Z-Y view", 600, 300, 1000, 600);
+  zyView->Divide(4, 2);
+  zyView->Draw();
+
   DoDraw();
 }
 

@@ -83,6 +83,8 @@ private:
     TGTextButton* fLookThrough;
     TGTextButton* fPallete;
     TGTextButton* fTimeMode;
+    TGTextButton* fzxView;
+    TGTextButton* fzyView;
     TGTextButton* fQaccumMode;
     TGTextButton* fTaccumMode;
     TGTextButton* fWfExplorer;
@@ -110,6 +112,12 @@ private:
     /// Multiple Micromegas canvas
     TCanvas* _mmm_canvas;
     TH2F* _mm[8];
+
+    /// different projections
+    TCanvas* zxView{nullptr};
+    TH2F* zsMm[8];
+    TCanvas* zyView{nullptr};
+    TH2F* zyMm[8];
 
     /// Tracker info
     TCanvas* _tracker_canv;
@@ -168,6 +176,12 @@ public:
 
     /// Change to Time mode (instead of charge mode)
     void TimeModeClick();
+
+    /// Show Z-X view on the event
+    void ZxModeClick();
+
+    /// Show Zy view over event
+    void ZyModeClick();
 
     /// Show charge accumulation
     void ChargeAccumClicked();
