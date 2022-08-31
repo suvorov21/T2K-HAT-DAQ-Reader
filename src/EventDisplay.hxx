@@ -26,6 +26,7 @@
 #include <TRootEmbeddedCanvas.h>
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TH3F.h"
 #include "InterfaceFactory.hxx"
 #include "TThread.h"
 #include "TGraphErrors.h"
@@ -85,6 +86,7 @@ private:
     TGTextButton* fTimeMode;
     TGTextButton* fzxView;
     TGTextButton* fzyView;
+    TGTextButton* ftdView;
     TGTextButton* fQaccumMode;
     TGTextButton* fTaccumMode;
     TGTextButton* fWfExplorer;
@@ -114,6 +116,8 @@ private:
     TH2F* _mm[8];
 
     /// different projections
+    TCanvas* tdView{nullptr};
+    TH3F* tdMm[8];
     TCanvas* zxView{nullptr};
     TH2F* zsMm[8];
     TCanvas* zyView{nullptr};
@@ -182,6 +186,9 @@ public:
 
     /// Show Zy view over event
     void ZyModeClick();
+
+    /// Show 3D view
+    void TdModeClick();
 
     /// Show charge accumulation
     void ChargeAccumClicked();
