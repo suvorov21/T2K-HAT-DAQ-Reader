@@ -156,6 +156,12 @@ EventDisplay::EventDisplay(const TGWindow *p,
   windowGroup->AddFrame(fzyView, new TGLayoutHints(kLHintsLeft,
                                                    5, 0, 10, 0));
 
+  // Show 3D view
+  ftdView = new TGTextButton(windowGroup, " &3D view  ", 3);
+  ftdView->Connect("Clicked()", "EventDisplay", this, "TdModeClick()");
+  windowGroup->AddFrame(ftdView, new TGLayoutHints(kLHintsLeft,
+                                                   5, 0, 10, 0));
+
   // Show charge accumulation
   fQaccumMode = new TGTextButton(windowGroup, " &Charge accumulation  ", 3);
   fQaccumMode->Connect("Clicked()" , "EventDisplay", this, "ChargeAccumClicked()");
@@ -238,9 +244,13 @@ EventDisplay::EventDisplay(const TGWindow *p,
     zsMm[i] = new TH2F(Form("MMzx_%i", i), Form("ZX MM %i", i), 511, 0., 511., 38, -1., 37.);
   }
 
-  // ZY time
+  // ZY charge
   for (auto i = 0; i < 8; ++i) {
     zyMm[i] = new TH2F(Form("MMzy_%i", i), Form("ZY MM %i", i), 511, 0., 511., 34, -1., 33.);
+  }
+  // 3D
+  for (auto i = 0; i < 8; ++i) {
+    tdMm[i] = new TH3F(Form("MM3d_%i", i), Form("3D MM %i", i), 38, -1., 37., 34, -1., 33.,  511, 0., 511.);
   }
 
   // canvas for 8 MM view
@@ -297,6 +307,7 @@ void EventDisplay::DoDraw() {
     _mm[i]->Reset();
     zsMm[i]->Reset();
     zyMm[i]->Reset();
+    tdMm[i]->Reset();
   }
 
   for (const auto& hit : _event->GetHits()) {
@@ -320,6 +331,7 @@ void EventDisplay::DoDraw() {
 
     zsMm[hit->GetCard()]->Fill(maxt, x, qMax);
     zyMm[hit->GetCard()]->Fill(maxt, y, qMax);
+    tdMm[hit->GetCard()]->Fill(x, y, maxt, qMax);
 
     if (fIsTimeModeOn) {
         _mm[hit->GetCard()]->Fill(x, y, maxt);
@@ -385,6 +397,14 @@ void EventDisplay::DoDraw() {
       zyMm[i]->Draw("colz");
     }
     zyView->Update();
+  }
+
+  if (tdView) {
+    for (auto i = 0; i < 8; ++i) {
+      tdView->cd(i+1);
+      tdMm[i]->Draw("BOX");
+    }
+    tdView->Update();
   }
 
   if (f_ED_canvas) {
@@ -582,6 +602,20 @@ void EventDisplay::ZyModeClick() {
   zyView = new TCanvas("Multiple MM ZY", "Z-Y view", 600, 300, 1000, 600);
   zyView->Divide(4, 2);
   zyView->Draw();
+
+  DoDraw();
+}
+
+void EventDisplay::TdModeClick() {
+  if (tdView) {
+    delete tdView;
+    tdView = nullptr;
+    return;
+  }
+
+  tdView = new TCanvas("Multiple MM 3D", "3D view", 600, 300, 1000, 600);
+  tdView->Divide(4, 2);
+  tdView->Draw();
 
   DoDraw();
 }
