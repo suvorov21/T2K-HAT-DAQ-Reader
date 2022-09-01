@@ -175,10 +175,30 @@ EventDisplay::EventDisplay(const TGWindow *p,
                                                        5, 0, 10, 0));
 
   // WF explorer
-  fWfExplorer = new TGTextButton(windowGroup, " &WF explorer  ", 3);
-  fWfExplorer->Connect("Clicked()" , "EventDisplay", this, "WfExplorerClicked()");
-  windowGroup->AddFrame(fWfExplorer, new TGLayoutHints(kLHintsLeft,
+  auto wfExplorerGroup = new TGHorizontalFrame(this);
+  fWfExplorer = new TGTextButton(wfExplorerGroup, " &WF explorer  ", 3);
+  fWfExplorer->Connect("Clicked()", "EventDisplay", this, "WfExplorerClicked()");
+  wfExplorerGroup->AddFrame(fWfExplorer, new TGLayoutHints(kLHintsLeft,
+                                                           5, 0, 10, 0));
+
+  // MM selector
+  fCombo = new TGNumberEntry(wfExplorerGroup, 0, 4, 999, TGNumberFormat::kNESInteger,
+                             TGNumberFormat::kNEANonNegative,
+                             TGNumberFormat::kNELLimitMinMax,
+                             0, 8);
+
+  fCombo->Connect("Modified()", "EventDisplay", this, "ChangeMM()");
+//  for (auto i = 0; i < 9; i++) {
+//    char tmpName[10];
+//    sprintf(tmpName, "MM %i", i+1);
+//    fCombo->AddEntry(tmpName, i+1);
+//  }
+//    fCombo->Resize(150, 20);
+  wfExplorerGroup->AddFrame(fCombo, new TGLayoutHints(kLHintsLeft,
                                                        5, 0, 10, 0));
+
+  windowGroup->AddFrame(wfExplorerGroup, new TGLayoutHints(kLHintsLeft,
+                                                       10, 0, 180, 0));
 
   fMain->AddFrame(windowGroup, new TGLayoutHints(kLHintsLeft,
                                                  10, 0, 10, 0));
@@ -321,7 +341,7 @@ void EventDisplay::DoDraw() {
     auto maxt = hit->GetTime() + (max - wf.begin());
     auto x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
     auto y = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
-    if (hit->GetCard() == 0) {
+    if (hit->GetCard() == fCardExplore) {
       if (fIsTimeModeOn){
         MM->Fill(x, y, maxt);
       } else {
@@ -688,6 +708,11 @@ void EventDisplay::WfExplorerClicked() {
   }
 
   DoDraw();
+}
+
+void EventDisplay::ChangeMM() {
+    fCardExplore = fCombo->GetIntNumber();
+    DoDraw();
 }
 
 

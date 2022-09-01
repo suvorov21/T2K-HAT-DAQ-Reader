@@ -90,6 +90,7 @@ private:
     TGTextButton* fQaccumMode;
     TGTextButton* fTaccumMode;
     TGTextButton* fWfExplorer;
+    TGNumberEntry* fCombo;
     TGNumberEntry* fNumber;
     TGTextEntry* fEntry;
     TBox fbox;
@@ -97,6 +98,8 @@ private:
     TGNumberEntry* fWF_start;
     TGNumberEntry* fWF_end;
     TGLabel *fLabel;
+
+    int fCardExplore{0};
 
     /// Time mode
     bool fIsTimeModeOn = false;
@@ -201,6 +204,9 @@ public:
 
     /// Change the WF range
     void ChangeWFrange();
+
+    /// Change MM on WF explorer
+    void ChangeMM();
 
     TThread *fLookThread;
 
