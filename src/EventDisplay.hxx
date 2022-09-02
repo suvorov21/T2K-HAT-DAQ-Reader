@@ -89,6 +89,7 @@ private:
     TGTextButton* ftdView;
     TGTextButton* fQaccumMode;
     TGTextButton* fTaccumMode;
+    TGTextButton* fChargeBtn;
     TGTextButton* fWfExplorer;
     TGNumberEntry* fCombo;
     TGNumberEntry* fNumber;
@@ -113,6 +114,9 @@ private:
     TH2F* _mmCharge[8];
     TCanvas* _timeAccum{nullptr};
     TH1F* _mmTime[8];
+
+    TCanvas* fChargeCanv{nullptr};
+    TH1F* chargeHisto;
 
     /// Multiple Micromegas canvas
     TCanvas* _mmm_canvas;
@@ -207,6 +211,9 @@ public:
 
     /// Change MM on WF explorer
     void ChangeMM();
+
+    /// Draw charge per column
+    void ChargeClicked();
 
     TThread *fLookThread;
 

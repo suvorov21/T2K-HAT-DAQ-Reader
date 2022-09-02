@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <unordered_map>
 
 ClassImp(EventDisplay);
 
@@ -200,6 +201,11 @@ EventDisplay::EventDisplay(const TGWindow *p,
   windowGroup->AddFrame(wfExplorerGroup, new TGLayoutHints(kLHintsLeft,
                                                        10, 0, 180, 0));
 
+    fChargeBtn = new TGTextButton(windowGroup, " &Charge / column  ", 3);
+    fChargeBtn->Connect("Clicked()" , "EventDisplay", this, "ChargeClicked()");
+    windowGroup->AddFrame(fChargeBtn, new TGLayoutHints(kLHintsLeft,
+                                                         5, 0, 10, 0));
+
   fMain->AddFrame(windowGroup, new TGLayoutHints(kLHintsLeft,
                                                  10, 0, 10, 0));
 
@@ -282,6 +288,7 @@ EventDisplay::EventDisplay(const TGWindow *p,
     _mm[i]->Draw("colz");
   }
 
+    chargeHisto = new TH1F("Charge", "Charge", 200, 0., 20000);
 //  _tracker_canv = new TCanvas("Tracker", "Tracker", 0, 800, 400, 400);
 //  _tracker_canv->Divide(2, 2);
 //  for (auto & tr : _tracker)
@@ -330,6 +337,8 @@ void EventDisplay::DoDraw() {
     tdMm[i]->Reset();
   }
 
+  std::unordered_map<int, int> charge;
+
   for (const auto& hit : _event->GetHits()) {
     auto wf = hit->GetADCvector();
     auto max = std::max_element(wf.cbegin(), wf.cend());
@@ -364,7 +373,15 @@ void EventDisplay::DoDraw() {
       eventPrev = eventID;
       _mmCharge[hit->GetCard()]->Fill(x, y, qMax);
       _mmTime[hit->GetCard()]->Fill(maxt);
+
+        charge[(hit->GetCard() % 4) * 36 + x] += qMax;
     }
+  }
+
+  for (auto ch : charge) {
+      if (ch.second != 0) {
+          chargeHisto->Fill(ch.second);
+      }
   }
 
 	double minZ{std::nan("unset")}, maxZ{std::nan("unset")};
@@ -431,6 +448,12 @@ void EventDisplay::DoDraw() {
     edPad->cd();
     MM->Draw("colz");
     edPad->Update();
+  }
+
+  if (fChargeCanv) {
+      fChargeCanv->cd();
+      chargeHisto->Draw();
+      fChargeCanv->Update();
   }
 
 //  if (_interface->HasTracker()) {
@@ -666,6 +689,19 @@ void EventDisplay::TimeAccumClicked() {
   _timeAccum->Draw();
 
   DoDraw();
+}
+
+void EventDisplay::ChargeClicked() {
+    if (fChargeCanv) {
+        delete fChargeCanv;
+        fChargeCanv = nullptr;
+        return;
+    }
+
+    fChargeCanv = new TCanvas("Charge", "Charge ", 600, 300, 800, 600);
+    fChargeCanv->Draw();
+
+    DoDraw();
 }
 
 void EventDisplay::WfExplorerClicked() {
