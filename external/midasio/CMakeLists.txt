@@ -54,7 +54,7 @@ foreach(SOURCE_FILE_PATH ${MIDASIO_SOURCE_FILES})
 ENDFOREACH()
 
 set(MIDASIO_INCLUDE_DIR
-        ${MIDASIO_SOURCE_FILES}
+        ${MIDASIO_DIR}
         )
 
 include_directories( ${MIDASIO_INCLUDE_DIR} )
