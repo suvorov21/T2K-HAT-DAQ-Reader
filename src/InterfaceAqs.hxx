@@ -30,6 +30,8 @@ class InterfaceAQS : public InterfaceBase {
     Mapping _t2k;
 
     int _firstEv;
+
+    static int32_t HashChannel(const int card, const int chip, const int channel);
 };
 
 #endif //DAQ_READER_SRC_INTERFACEAQS_HXX_

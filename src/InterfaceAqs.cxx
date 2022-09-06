@@ -4,6 +4,8 @@
 
 #include "InterfaceAqs.hxx"
 
+#include <unordered_map>
+
 //******************************************************************************
 bool InterfaceAQS::Initialise(const std::string& file_namme, int verbose) {
 //******************************************************************************
@@ -19,6 +21,7 @@ bool InterfaceAQS::Initialise(const std::string& file_namme, int verbose) {
 
     if (_fsrc == nullptr) {
         std::cerr << "Input file could not be read" << std::endl;
+        std::cerr << "File: " << _fsrc << std::endl;
     }
 
     return true;
@@ -138,8 +141,8 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
 
     // clean the padAmpl
     auto event = new TRawEvent(id);
-    std::vector<TRawHit*> hitVector{};
     int eventNumber = -1;
+    std::unordered_map<int32_t, TRawHit*> hitMap;
 
     while (done) {
         if (fread(&datum, sizeof(unsigned short), 1, _fsrc) != 1) {
@@ -170,26 +173,27 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
                     if ((int)_dc.EventNumber == _eventPos[id].second)
                         eventNumber = (int)_dc.EventNumber;
                 } else if (eventNumber == _eventPos[id].second && _dc.ItemType == IT_ADC_SAMPLE) {
-                    // std::cout << "ADC datum" << std::endl;
                     if (_dc.ChannelIndex != 15 && _dc.ChannelIndex != 28 && _dc.ChannelIndex != 53 && _dc.ChannelIndex != 66 && _dc.ChannelIndex > 2 && _dc.ChannelIndex < 79) {
-                        auto hitCandidate = new TRawHit(_dc.CardIndex,
-                                                        _dc.ChipIndex,
-                                                        _dc.ChannelIndex);
-                        auto hitIt = std::find_if(hitVector.begin(),
-                                                  hitVector.end(),
-                                                  [hitCandidate](const TRawHit* ptr){return *hitCandidate == *ptr;});
+
+                        if (_verbose > 1) {
+                            std::cout << "card\t" << _dc.CardIndex << "\t" << _dc.ChipIndex << "\t" << _dc.ChannelIndex << std::endl;
+                        }
+                        auto chHash = HashChannel(_dc.CardIndex, _dc.ChipIndex, _dc.ChannelIndex);
+                        auto hitIt = hitMap.find(chHash);
 
 
                         int a = (int)_dc.AbsoluteSampleIndex;
                         int b = (int)_dc.AdcSample;
 
-                        if (hitIt != hitVector.end()) {
-                            (*hitIt)->SetADCunit(a, b);
-                            delete hitCandidate;
+                        if (hitIt != hitMap.end()) {
+                            hitMap[chHash]->SetADCunit(a, b);
                         } else {
+                            auto hitCandidate = new TRawHit(_dc.CardIndex,
+                                                            _dc.ChipIndex,
+                                                            _dc.ChannelIndex);
                             hitCandidate->ResetWF();
                             hitCandidate->SetADCunit(a, b);
-                            hitVector.emplace_back(hitCandidate);
+                            hitMap[chHash] = hitCandidate;
                         }
                     }
                 }
@@ -202,11 +206,15 @@ TRawEvent* InterfaceAQS::GetEvent(long int id) {
         } // end of second loop inside while
     } // end of while(done) loop
 
-    event->Reserve(hitVector.size());
-    for (auto& hit : hitVector) {
-        hit->ShrinkWF();
-        event->AddHit(hit);
+    event->Reserve(hitMap.size());
+    for (auto& hit : hitMap) {
+        hit.second->ShrinkWF();
+        event->AddHit(hit.second);
     }
     return event;
+}
+
+int32_t InterfaceAQS::HashChannel(const int card, const int chip, const int channel) {
+    return card*16*80 + chip*80 + channel;
 }
 
