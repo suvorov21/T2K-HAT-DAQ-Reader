@@ -61,7 +61,6 @@ int main(int argc, char **argv) {
     TString out_file = OutputBase::getFileName(outPath, fileName);
 
     // Select the output format
-    // TODO add CLI for this choice
     std::shared_ptr<OutputBase> output;
     if (useArray) {
         output = std::make_shared<OutputArray>();
