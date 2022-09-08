@@ -10,6 +10,8 @@
 #include "InterfaceMidas.hxx"
 #include "InterfaceAqs.hxx"
 
+#include <memory>
+
 /// Factory returns proper input interface
 class InterfaceFactory {
  public:
@@ -22,7 +24,7 @@ class InterfaceFactory {
         }
 
         if (file_name.EndsWith(".root")) {
-            TFile file(file_name);
+            std::unique_ptr<TFile> p_file(TFile::Open(file_name)); TFile &file = *p_file;
             if (file.Get<TTree>("EventTree")) {
                 return std::make_shared<InterfaceRawEvent>();
             } else if (file.Get<TTree>("tree")) {

@@ -16,7 +16,7 @@ bool InterfaceRawEvent::Initialise(const std::string& file_name, int verbose) {
 //******************************************************************************
   std::cout << "Initialise TRawEvent interface" << std::endl;
   _verbose = verbose;
-  _file_in = new TFile(file_name.c_str());
+  _file_in = TFile::Open(file_name.c_str());
   _tree_in = (TTree*)_file_in->Get("EventTree");
   _event = new TRawEvent();
   _tree_in->SetBranchAddress("TRawEvent", &_event);
