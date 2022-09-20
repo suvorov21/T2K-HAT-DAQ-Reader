@@ -6,6 +6,8 @@
 #define DAQ_READER_SRC_OUTPUT_HXX_
 
 #include "TFile.h"
+#include <iostream>
+#include <fstream>
 
 #include "TRawEvent.hxx"
 #include "T2KConstants.h"
@@ -58,5 +60,23 @@ class OutputTRawEvent : public OutputBase {
     void AddTrackerEvent(const std::vector<float>& TrackerPos) override;
     void Finilise() override;
 };
+
+
+/// Store output as text file
+class OutputText : public OutputBase{
+    DAQ _daq;
+    Mapping _t2k;
+
+    ofstream _fOutputFile;
+
+    int _time_mid, _time_msb, _time_lsb;
+public:
+    void Initialise(const TString& fileName, bool useTracker) override;
+    void AddEvent(TRawEvent* event) override;
+    void AddTrackerEvent(const std::vector<float>& TrackerPos) override;
+    void Fill() override;
+    void Finilise() override;
+};
+
 
 #endif //DAQ_READER_SRC_OUTPUT_HXX_

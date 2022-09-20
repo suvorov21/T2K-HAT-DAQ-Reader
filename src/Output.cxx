@@ -110,3 +110,38 @@ void OutputTRawEvent::Finilise() {
     _file->Write();
     _file->Close();
 }
+
+
+///////////////////////////
+
+
+void OutputText::Initialise(const TString& fileName, bool useTracker) {
+    _fOutputFile.open(fileName);
+    if (!_fOutputFile.is_open()) {
+        std::cerr << "Text file could not be opened." << std::endl;
+        std::cerr << "File probably exists. Prevent overwriting" << std::endl;
+        exit(1);
+    }
+    _event = new TRawEvent();
+}
+
+void OutputText::AddEvent(TRawEvent* event) {
+    _event = event;
+}
+
+void OutputText::AddTrackerEvent(const std::vector<float>& TrackerPos) {
+//    for (float & data : _trackerPos)
+//        data = -999.;
+//    for (auto it = 0;  it < TrackerPos.size(); ++it)
+//        if (TrackerPos[it] > 0)
+//            _trackerPos[it] = TrackerPos[it];
+}
+
+void OutputText::Fill(){
+    int eventID = _event->GetID();
+
+}
+
+void OutputText::Finilise() {
+    _fOutputFile.close();
+}

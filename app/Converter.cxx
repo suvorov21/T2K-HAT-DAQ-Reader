@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
     clParser.addOption("tracker", {"-s", "--silicon"}, "Add silicon tracker info");
     clParser.addOption("nEventsFile", {"-n", "--nEventsFile"}, "Number of events to process");
 
+    clParser.addOption("text", {"--text"}, "Convert to text file");
     clParser.addOption("array", {"--array"}, "Convert to 3D array");
     clParser.addOption("card", {"-c", "--card"}, "Specify the particular card that will be converted.");
 
@@ -44,6 +45,7 @@ int main(int argc, char **argv) {
     auto verbose = clParser.getOptionVal<int>("verbose", 1, 0);
 
     bool useArray = clParser.isOptionTriggered("array");
+    bool useText = clParser.isOptionTriggered("text");
     auto card = clParser.getOptionVal<int>("card", 0, 0);
 
     // define the proper interface to read it
@@ -65,7 +67,10 @@ int main(int argc, char **argv) {
     if (useArray) {
         output = std::make_shared<OutputArray>();
         output->SetCard(card);
-    } else {
+    } else if (useText) {
+        output = std::make_shared<OutputText>();
+    }
+    else {
         output = std::make_shared<OutputTRawEvent>();
     }
     output->Initialise(out_file, read_tracker);
