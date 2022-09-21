@@ -110,3 +110,56 @@ void OutputTRawEvent::Finilise() {
     _file->Write();
     _file->Close();
 }
+
+
+///////////////////////////
+
+
+void OutputText::Initialise(const TString& fileName, bool useTracker) {
+
+    _t2k.loadMapping();
+    _daq.loadDAQ();
+
+    _fOutputFile.open(fileName);
+    if (!_fOutputFile.is_open()) {
+        std::cerr << "Text file could not be opened." << std::endl;
+        std::cerr << "File probably exists. Prevent overwriting" << std::endl;
+        exit(1);
+    }
+    _event = new TRawEvent();
+}
+
+void OutputText::AddEvent(TRawEvent* event) {
+    _event = event;
+}
+
+void OutputText::AddTrackerEvent(const std::vector<float>& TrackerPos) {
+//    for (float & data : _trackerPos)
+//        data = -999.;
+//    for (auto it = 0;  it < TrackerPos.size(); ++it)
+//        if (TrackerPos[it] > 0)
+//            _trackerPos[it] = TrackerPos[it];
+}
+
+void OutputText::Fill(){
+    int eventID = _event->GetID();
+
+    for (const auto& hit : _event->GetHits()) {
+        // doesn't fill the array if the particular card is required
+//        if (_card >= 0 && _card != hit->GetCard()) {
+//            continue;
+//        }
+        int x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+        int y = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+
+        auto v = hit->GetADCvector();
+        _fOutputFile << "i " << eventID << " card " << hit->GetCard() << " px " << x << " py " << y << " t " << hit->GetTime() << " nslot " << v.size() << "\n";
+        for (auto t = 0; t < v.size(); ++t) {
+            _fOutputFile << v[t] << "\n";
+        }
+    }
+}
+
+void OutputText::Finilise() {
+    _fOutputFile.close();
+}
