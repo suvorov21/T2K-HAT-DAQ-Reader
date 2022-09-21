@@ -116,6 +116,10 @@ void OutputTRawEvent::Finilise() {
 
 
 void OutputText::Initialise(const TString& fileName, bool useTracker) {
+
+    _t2k.loadMapping();
+    _daq.loadDAQ();
+
     _fOutputFile.open(fileName);
     if (!_fOutputFile.is_open()) {
         std::cerr << "Text file could not be opened." << std::endl;
@@ -140,6 +144,20 @@ void OutputText::AddTrackerEvent(const std::vector<float>& TrackerPos) {
 void OutputText::Fill(){
     int eventID = _event->GetID();
 
+    for (const auto& hit : _event->GetHits()) {
+        // doesn't fill the array if the particular card is required
+//        if (_card >= 0 && _card != hit->GetCard()) {
+//            continue;
+//        }
+        int x = _t2k.i(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+        int y = _t2k.j(hit->GetChip() / n::chips, hit->GetChip() % n::chips, _daq.connector(hit->GetChannel()));
+
+        auto v = hit->GetADCvector();
+        _fOutputFile << "i " << eventID << " card " << hit->GetCard() << " px " << x << " py " << y << " t " << hit->GetTime() << " nslot " << v.size() << "\n";
+        for (auto t = 0; t < v.size(); ++t) {
+            _fOutputFile << v[t] << "\n";
+        }
+    }
 }
 
 void OutputText::Finilise() {
