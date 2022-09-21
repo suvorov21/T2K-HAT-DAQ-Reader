@@ -15,6 +15,7 @@ Supported output formats
 1. ROOT file with 3D array: `[32][36][511]`. 
 Requires `--array` flag and `--card 1` flag with a particular FEM card number to store
 2. ROOT file with TRawEvent (default option)
+3. Text ASCII format
 
 
 ## Compiling
@@ -36,7 +37,11 @@ output_path {-o,--output}: Output path (expected: 1 value)
 verbose {-v,--verbose}: Verbosity level (expected: 1 value)
 tracker {-s,--silicon}: Add silicon tracker info (expected: 1 value)
 nEventsFile {-n,--nEventsFile}: Number of events to process (expected: 1 value)
+text {--text}: Convert to text file (trigger)
+array {--array}: Convert to 3D array (expected: 1 value)
+card {-c,--card}: Specify the particular card that will be converted. (expected: 1 value)
 help {-h,--help}: Print usage (trigger)
+Command Line Args: { "--help" }
 ```
 
 Example:
