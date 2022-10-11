@@ -24,7 +24,7 @@ void OutputBase::Fill() {
 }
 
 void OutputArray::Initialise(const TString& fileName, bool useTracker) {
-    _file = new TFile(fileName, "NEW");
+    _file = TFile::Open(fileName, "NEW");
     if (!_file->IsOpen()) {
         std::cerr << "ROOT file could not be opend." << std::endl;
         std::cerr << "File probably exists. Prevent overwriting" << std::endl;
@@ -80,7 +80,7 @@ void OutputArray::Finilise() {
 
 
 void OutputTRawEvent::Initialise(const TString& fileName, bool useTracker) {
-    _file = new TFile(fileName, "NEW");
+    _file = TFile::Open(fileName, "NEW");
     if (!_file->IsOpen()) {
         std::cerr << "ROOT file could not be opened." << std::endl;
         std::cerr << "File probably exists. Prevent overwriting" << std::endl;
